@@ -15,12 +15,20 @@
  */
 package nl.knaw.dans.easy.solr4files
 
-import scala.util.{ Try, Success }
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
-class EasyUpdateSolr4filesIndexApp(wiring: ApplicationWiring) extends AutoCloseable {
+import scala.util.{ Success, Try }
 
+class EasyUpdateSolr4filesIndexApp(wiring: ApplicationWiring) extends AutoCloseable
+  with DebugEnhancedLogging {
 
-  // The application's API here. This is what is used by driver or entry-point objects.
+  def initAllStores(): Try[String] = wiring.initAllStores()
+
+  def initSingleStore(storeName: String): Try[String] = wiring.initSingleStore(storeName).map(_.toString)
+
+  def update(storeName: String, bagId: String): Try[String] = wiring.update(storeName, bagId).map(_.toString)
+
+  def delete(bagId: String): Try[String] = wiring.delete(bagId)
 
   def init(): Try[Unit] = {
     // Do any initialization of the application here. Typical examples are opening

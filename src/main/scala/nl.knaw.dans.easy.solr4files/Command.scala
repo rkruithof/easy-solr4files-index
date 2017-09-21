@@ -21,15 +21,12 @@ import resource._
 
 import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Failure, Try }
 
 object Command extends App with DebugEnhancedLogging {
-  type FeedBackMessage = String
 
   val configuration = Configuration()
-  val commandLine: CommandLineOptions = new CommandLineOptions(args, configuration) {
-    verify()
-  }
+  val commandLine: CommandLineOptions = new CommandLineOptions(args, configuration)
   val app = new EasyUpdateSolr4filesIndexApp(new ApplicationWiring(configuration))
 
   managed(app)
@@ -44,6 +41,15 @@ object Command extends App with DebugEnhancedLogging {
     .doIfFailure { case NonFatal(e) => println(s"FAILED: ${ e.getMessage }") }
 
   private def runCommand(app: EasyUpdateSolr4filesIndexApp): Try[FeedBackMessage] = {
-    Success("")
+    commandLine.subcommand
+      .collect {
+        case update @ commandLine.update => app.update(update.bagStore(), update.bagUuid())
+        case delete @ commandLine.delete => app.delete(delete.bagUuid())
+        case init @ commandLine.init => init.bagStore.toOption
+          .map(app.initSingleStore)
+          .getOrElse(app.initAllStores())
+        case commandLine.runService => Failure(new NotImplementedError())
+      }
+      .getOrElse(Failure(new IllegalArgumentException(s"Unknown command: ${ commandLine.subcommand }")))
   }
 }

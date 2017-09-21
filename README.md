@@ -2,20 +2,24 @@ easy-update-solr4files-index
 ===========
 [![Build Status](https://travis-ci.org/DANS-KNAW/easy-update-solr4files-index.png?branch=master)](https://travis-ci.org/DANS-KNAW/easy-update-solr4files-index)
 
-<!-- Remove this comment and extend the descriptions below -->
-
 
 SYNOPSIS
 --------
 
-    easy-update-solr4files-index (synopsis of command line parameters)
-    easy-update-solr4files-index (... possibly multiple lines for subcommands)
-
+  easy-update-solr4files-index {update|delete} [-s <bag-store>] <uuid>
+  easy-update-solr4files-index {init} <bag-store>
+  easy-update-solr4files-index run-service
 
 DESCRIPTION
 -----------
 
-Update the EASY SOLR for Files Index with file data from a bag-store
+Update the EASY SOLR for Files Index with file data from a bag-store.
+
+File content is indexed together with some file metadata as well as dataset metadata.
+Files are only indexed if `easy_file_accessible_to` gets a value 
+`anonymous`, `known`, `restrictedGroup` or `restrictedRequest`.
+If the value is not provided at file level by `metadata/files.xml`,
+a default is derived from `<ddm:profile><ddm:accessRights>` in `metadata/dataset.xml`.
 
 
 ARGUMENTS
@@ -26,14 +30,36 @@ ARGUMENTS
         --help      Show help message
         --version   Show version of this program
 
+    Subcommand: update - Update accessible files of a bag in the SOLR index
+      -s, --bag-store  <arg>   Name of the bag store (default = pdbs)
+          --help               Show help message
+    
+     trailing arguments:
+      bag-uuid (required)
+    ---
+    
+    Subcommand: delete - Delete all file documents of a bag from the SOLR index
+          --help   Show help message
+    
+     trailing arguments:
+      bag-uuid (required)
+    ---
+    
+    Subcommand: init - Rebuild the SOLR index from scratch for active bags in one or all store(s)
+          --help   Show help message
+    
+     trailing arguments:
+      bag-store (not required)
+    ---
+    
     Subcommand: run-service - Starts EASY Update Solr4files Index as a daemon that services HTTP requests
-        --help   Show help message
+          --help   Show help message
     ---
 
 EXAMPLES
 --------
 
-    easy-update-solr4files-index -o value
+    easy-update-solr4files-index update 9da0541a-d2c8-432e-8129-979a9830b427
 
 
 INSTALLATION AND CONFIGURATION

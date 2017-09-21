@@ -32,3 +32,5 @@
         name: easy-update-solr4files-index
         state: started
         enabled: yes
+
+# TODO implement as service add solr and bagstore, see https://github.com/DANS-KNAW/easy-dtap/pull/131
