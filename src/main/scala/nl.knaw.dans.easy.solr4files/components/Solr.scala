@@ -36,16 +36,19 @@ trait Solr extends DebugEnhancedLogging {
   def createDoc(item: FileItem, size: Long): Try[FileFeedback] = {
     item.bag.fileUrl(item.path).flatMap { fileUrl =>
       val solrDocId = s"${ item.bag.bagId }/${ item.path }"
+      val solrFields = Seq("file_size" -> size.toString) ++
+        item.bag.solrLiterals ++
+        item.ddm.solrLiterals ++
+        item.solrLiterals
       val request = new ContentStreamUpdateRequest("/update/extract") {
         setWaitSearcher(false)
         setMethod(METHOD.POST)
         addContentStream(new ContentStreamBase.URLStream(fileUrl))
-        setParam("literal.id", solrDocId)
-        setParam("literal.easy_file_size", size.toString)
-        for ((key, value) <- item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals) {
+        for ((key, value) <- solrFields) {
           if (value.trim.nonEmpty)
             setParam(s"literal.easy_$key", value.replaceAll("\\s+", " ").trim)
         }
+        setParam("literal.id", solrDocId)
       }
       submitRequest(solrDocId, request)
     }
