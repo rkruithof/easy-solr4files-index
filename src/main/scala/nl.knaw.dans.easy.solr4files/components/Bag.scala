@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
-import java.net.URL
+import java.net.{ URL, URLEncoder }
 
 import nl.knaw.dans.easy.solr4files.{ FileToShaMap, SolrLiterals, _ }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -40,7 +40,7 @@ case class Bag(storeName: String,
   }.getOrElse("")
 
   def fileUrl(path: String): Try[URL] = {
-    vault.fileURL(storeName, bagId, path)
+    vault.fileURL(storeName, bagId,  URLEncoder.encode(path,"UTF8"))
   }
 
   private lazy val fileShas: FileToShaMap = {
@@ -66,6 +66,7 @@ case class Bag(storeName: String,
     .flatMap(_.loadXml)
 
   val solrLiterals: SolrLiterals = Seq(
+    ("dataset_store_id", storeName),
     ("dataset_depositor_id", getDepositor),
     ("dataset_id", bagId)
   )
