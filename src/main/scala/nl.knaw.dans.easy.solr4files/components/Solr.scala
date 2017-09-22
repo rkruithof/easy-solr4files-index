@@ -43,7 +43,7 @@ trait Solr extends DebugEnhancedLogging {
         .filter { case (_, v) => v.nonEmpty }
       logger.debug(solrFields
         .map { case (key, value) => s"$key = $value" }
-        .mkString(s"$solrFields\n\t", "\n\t", "")
+        .mkString("\n\t")
       )
       submitWithContent(fileUrl, solrDocId, solrFields)
         .map(_ => FileSubmittedWithContent(solrDocId))
@@ -87,9 +87,8 @@ trait Solr extends DebugEnhancedLogging {
   private def resubmitMetadata(solrDocId: String, solrFields: SolrLiterals) = {
     Try(solrClient.add(new SolrInputDocument() {
       solrFields
-        .withFilter(_._1 == "easy_dataset_store_id")
         .foreach { case (k, v) =>
-          addField(s"literal.easy_$k", v)
+          addField("easy_" + k, v)
         }
       addField("id", solrDocId)
     })).map(_.getStatus match {
@@ -104,7 +103,7 @@ trait Solr extends DebugEnhancedLogging {
 
   private def checkUpdateStatus(msg: String, response: UpdateResponse) = {
     Try(response.getStatus) match {
-      case Success(HttpStatus.SC_OK) => Success(())
+      case Success(0) => Success(())
       case Success(_) => Failure(SolrUpdateStatusException(msg, response))
       case Failure(_: NullPointerException) => Success(())
       case Failure(t) => Failure(t)
