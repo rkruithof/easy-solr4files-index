@@ -67,7 +67,7 @@ trait Solr extends DebugEnhancedLogging {
       .recoverWith { case t => Failure(SolrCommitException(t)) }
   }
 
-  private def submitWithContent(fileUrl: URL, solrDocId: String, solrFields: Seq[(FeedBackMessage, FeedBackMessage)]) = {
+  private def submitWithContent(fileUrl: URL, solrDocId: String, solrFields: SolrLiterals) = {
     Try(solrClient.request(new ContentStreamUpdateRequest("/update/extract") {
       setWaitSearcher(false)
       setMethod(METHOD.POST)
@@ -79,12 +79,12 @@ trait Solr extends DebugEnhancedLogging {
     })).flatMap(checkSolrStatus)
   }
 
-  private def resubmitMetadata(solrDocId: String, solrFields: Seq[(FeedBackMessage, FeedBackMessage)]) = {
+  private def resubmitMetadata(solrDocId: String, solrFields: SolrLiterals) = {
     Try(solrClient.add(new SolrInputDocument() {
       solrFields
         .withFilter(_._1 == "easy_dataset_store_id")
         .foreach { case (k, v) =>
-          addField(s"easy_$k", v)
+          addField(s"literal.easy_$k", v)
         }
       addField("id", solrDocId)
     })).map(_.getStatus match {
