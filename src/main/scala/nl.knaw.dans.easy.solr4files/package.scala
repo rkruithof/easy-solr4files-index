@@ -21,6 +21,7 @@ import java.net.{ URL, URLDecoder }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.io.FileUtils.readFileToString
+import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.common.util.NamedList
 
 import scala.annotation.tailrec
@@ -42,8 +43,11 @@ package object solr4files extends DebugEnhancedLogging {
   case class SolrStatusException(namedList: NamedList[AnyRef])
     extends Exception(s"solr update returned: ${ namedList.asShallowMap().values().toArray().mkString }")
 
-  case class SolrDeleteException(bagId: String, cause: Throwable)
-    extends Exception(s"solr delete of bag $bagId failed with ${ cause.getMessage }", cause)
+  case class SolrUpdateStatusException(msg: String, response: UpdateResponse)
+    extends Exception(s"$msg ${response.getStatus}")
+
+  case class SolrDeleteException(query: String, cause: Throwable)
+    extends Exception(s"solr delete [$query] failed with ${ cause.getMessage }", cause)
 
   case class SolrUpdateException(solrId: String, cause: Throwable)
     extends Exception(s"solr update of file $solrId failed with ${ cause.getMessage }", cause)

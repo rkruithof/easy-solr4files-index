@@ -54,17 +54,22 @@ trait Solr extends DebugEnhancedLogging {
     }
   }
 
-
-  def deleteDocuments(query: String): Try[UpdateResponse] = {
-    // no status to check since UpdateResponse is a stub
-    Try(solrClient.deleteByQuery(new SolrQuery {set("q", query)}.getQuery))
-      .recoverWith { case t => Failure(SolrDeleteException(query, t)) }
+  def deleteDocuments(query: String): Try[Unit] = {
+    Try(solrClient.deleteByQuery(new SolrQuery {set("q", query) }.getQuery))
+      .flatMap(checkUpdateStatus(s"delete [$query] failed", _))
+      .recoverWith {
+        case t: SolrUpdateStatusException => Failure(t)
+        case t => Failure(SolrDeleteException(query, t))
+      }
   }
 
-  def commit(): Try[UpdateResponse] = {
-    // no status to check since UpdateResponse is a stub
+  def commit(): Try[Unit] = {
     Try(solrClient.commit())
-      .recoverWith { case t => Failure(SolrCommitException(t)) }
+      .flatMap(checkUpdateStatus("commit failed", _))
+      .recoverWith {
+        case t: SolrUpdateStatusException => Failure(t)
+        case t => Failure(SolrCommitException(t))
+      }
   }
 
   private def submitWithContent(fileUrl: URL, solrDocId: String, solrFields: SolrLiterals) = {
@@ -95,6 +100,15 @@ trait Solr extends DebugEnhancedLogging {
   }.recoverWith {
     case t2: SolrStatusException => Failure(t2)
     case t2 => Failure(SolrUpdateException(solrDocId, t2))
+  }
+
+  private def checkUpdateStatus(msg: String, response: UpdateResponse) = {
+    Try(response.getStatus) match {
+      case Success(HttpStatus.SC_OK) => Success(())
+      case Success(_) => Failure(SolrUpdateStatusException(msg, response))
+      case Failure(_: NullPointerException) => Success(())
+      case Failure(t) => Failure(t)
+    }
   }
 
   private def checkSolrStatus(namedList: NamedList[AnyRef]) = {
