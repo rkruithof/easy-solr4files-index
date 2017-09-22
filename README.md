@@ -27,8 +27,8 @@ ARGUMENTS
 
     Options:
 
-        --help      Show help message
-        --version   Show version of this program
+      --help      Show help message
+      --version   Show version of this program
 
     Subcommand: update - Update accessible files of a bag in the SOLR index
       -s, --bag-store  <arg>   Name of the bag store (default = pdbs)
@@ -38,11 +38,11 @@ ARGUMENTS
       bag-uuid (required)
     ---
     
-    Subcommand: delete - Delete all file documents of a bag from the SOLR index
+    Subcommand: delete - Delete documents from the SOLR index; '*:*' deletes all, 'id:<UUID>*' deletes a bag
           --help   Show help message
     
      trailing arguments:
-      bag-uuid (required)
+      solr-query (required)
     ---
     
     Subcommand: init - Rebuild the SOLR index from scratch for active bags in one or all store(s)

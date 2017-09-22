@@ -59,8 +59,8 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
     footer(SUBCOMMAND_SEPARATOR)
   }
   val delete = new Subcommand("delete") {
-    descr("Delete all file documents of a bag from the SOLR index")
-    val bagUuid: ScallopOption[UUID] = trailArg(name = "bag-uuid", required = true)
+    descr("Delete documents from the SOLR index; '*:*' deletes all, 'id:<UUID>*' deletes a bag")
+    val query: ScallopOption[UUID] = trailArg(name = "solr-query", required = true)
     footer(SUBCOMMAND_SEPARATOR)
   }
   val init = new Subcommand("init") {

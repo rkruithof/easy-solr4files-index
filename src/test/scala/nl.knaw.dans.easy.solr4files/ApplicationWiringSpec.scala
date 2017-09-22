@@ -75,9 +75,9 @@ class ApplicationWiringSpec extends TestSupportFixture {
   }
 
   "delete" should "call the stubbed solrClient.deleteByQuery" in {
-    val result = new MockedAndStubbedWiring().delete(uuid)
+    val result = new MockedAndStubbedWiring().delete("*:*")
     inside(result) { case Success(msg) =>
-      msg shouldBe s"Deleted file documents for bag $uuid"
+      msg shouldBe s"Deleted documents with query *:*"
     }
   }
 

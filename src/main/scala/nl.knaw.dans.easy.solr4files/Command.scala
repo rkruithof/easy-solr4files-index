@@ -44,7 +44,7 @@ object Command extends App with DebugEnhancedLogging {
     commandLine.subcommand
       .collect {
         case update @ commandLine.update => app.update(update.bagStore(), update.bagUuid())
-        case delete @ commandLine.delete => app.delete(delete.bagUuid())
+        case delete @ commandLine.delete => app.delete(delete.query())
         case init @ commandLine.init => init.bagStore.toOption
           .map(app.initSingleStore)
           .getOrElse(app.initAllStores())
