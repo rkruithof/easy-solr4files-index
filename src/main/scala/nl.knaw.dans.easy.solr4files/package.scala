@@ -21,7 +21,6 @@ import java.net.{ URL, URLDecoder }
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.io.FileUtils.readFileToString
-import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.common.util.NamedList
 
 import scala.annotation.tailrec
@@ -41,10 +40,7 @@ package object solr4files extends DebugEnhancedLogging {
     extends Exception(s"$msg - ${ response.statusLine }, details: ${ response.body }")
 
   case class SolrStatusException(namedList: NamedList[AnyRef])
-    extends Exception(s"solr update returned: ${ namedList.asShallowMap().values().toArray().mkString }")
-
-  case class SolrUpdateStatusException(msg: String, response: UpdateResponse)
-    extends Exception(s"$msg ${response.getStatus}")
+    extends Exception(s"solr returned: ${ namedList.asShallowMap().values().toArray().mkString }")
 
   case class SolrDeleteException(query: String, cause: Throwable)
     extends Exception(s"solr delete [$query] failed with ${ cause.getMessage }", cause)
@@ -91,7 +87,7 @@ package object solr4files extends DebugEnhancedLogging {
   case class BagSubmitted(override val msg: String, results: Seq[FileFeedback]) extends Feedback(msg) {
     override def toString: String = {
       val xs = results.groupBy(_.getClass.getSimpleName)
-      s"Bag $msg: ${ xs.keySet.map(className => s"${ xs(className).size } times $className").mkString(", ")}"
+      s"Bag $msg: ${ xs.keySet.map(className => s"${ xs(className).size } times $className").mkString(", ") }"
     }
   }
 

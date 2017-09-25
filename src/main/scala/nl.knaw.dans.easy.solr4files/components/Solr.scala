@@ -56,20 +56,14 @@ trait Solr extends DebugEnhancedLogging {
 
   def deleteDocuments(query: String): Try[Unit] = {
     Try(solrClient.deleteByQuery(new SolrQuery {set("q", query) }.getQuery))
-      .flatMap(checkUpdateStatus(s"delete [$query] failed", _))
-      .recoverWith {
-        case t: SolrUpdateStatusException => Failure(t)
-        case t => Failure(SolrDeleteException(query, t))
-      }
+      .flatMap(checkUpdateResponseStatus)
+      .recoverWith { case t => Failure(SolrDeleteException(query, t)) }
   }
 
   def commit(): Try[Unit] = {
     Try(solrClient.commit())
-      .flatMap(checkUpdateStatus("commit failed", _))
-      .recoverWith {
-        case t: SolrUpdateStatusException => Failure(t)
-        case t => Failure(SolrCommitException(t))
-      }
+      .flatMap(checkUpdateResponseStatus)
+      .recoverWith { case t => Failure(SolrCommitException(t)) }
   }
 
   private def submitWithContent(fileUrl: URL, solrDocId: String, solrFields: SolrLiterals) = {
@@ -91,20 +85,16 @@ trait Solr extends DebugEnhancedLogging {
           addField("easy_" + k, v)
         }
       addField("id", solrDocId)
-    })).map(_.getStatus match {
-      case 0 => // no response header
-      case HttpStatus.SC_OK =>
-      case status => throw new Exception(s"Resubmit $solrDocId returned status $status")
-    })
-  }.recoverWith {
-    case t2: SolrStatusException => Failure(t2)
-    case t2 => Failure(SolrUpdateException(solrDocId, t2))
+    }))
+      .flatMap(checkUpdateResponseStatus)
+      .recoverWith { case t => Failure(SolrUpdateException(solrDocId, t)) }
   }
 
-  private def checkUpdateStatus(msg: String, response: UpdateResponse) = {
+  private def checkUpdateResponseStatus(response: UpdateResponse) = {
     Try(response.getStatus) match {
       case Success(0) => Success(())
-      case Success(_) => Failure(SolrUpdateStatusException(msg, response))
+      case Success(HttpStatus.SC_OK) => Success(())
+      case Success(_) => Failure(SolrStatusException(response.getResponse))
       case Failure(_: NullPointerException) => Success(())
       case Failure(t) => Failure(t)
     }
