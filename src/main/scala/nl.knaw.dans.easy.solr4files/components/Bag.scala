@@ -41,7 +41,7 @@ case class Bag(storeName: String,
   }.getOrElse("")
 
   def fileUrl(path: String): Try[URL] = {
-    vault.fileURL(storeName, bagId,  URLEncoder.encode(path,"UTF8"))
+    vault.fileURL(storeName, bagId, path)
   }
 
 
