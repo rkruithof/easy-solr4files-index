@@ -41,7 +41,7 @@ trait Solr extends DebugEnhancedLogging {
       val solrFields = (item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals :+ "file_size" -> size.toString)
         .map { case (k, v) => (k, v.replaceAll("\\s+", " ").trim) }
         .filter { case (_, v) => v.nonEmpty }
-      logger.debug(solrFields
+      if (logger.underlying.isDebugEnabled) logger.debug(solrFields
         .map { case (key, value) => s"$key = $value" }
         .mkString("\n\t")
       )
@@ -80,10 +80,9 @@ trait Solr extends DebugEnhancedLogging {
 
   private def resubmitMetadata(solrDocId: String, solrFields: SolrLiterals) = {
     Try(solrClient.add(new SolrInputDocument() {
-      solrFields
-        .foreach { case (k, v) =>
-          addField("easy_" + k, v)
-        }
+      for ((k, v) <- solrFields) {
+        addField(s"easy_$k", v)
+      }
       addField("id", solrDocId)
     }))
       .flatMap(checkUpdateResponseStatus)
@@ -91,11 +90,11 @@ trait Solr extends DebugEnhancedLogging {
   }
 
   private def checkUpdateResponseStatus(response: UpdateResponse) = {
+    // this method hides the inconsistent design of the solr library from the rest of the code
     Try(response.getStatus) match {
-      case Success(0) => Success(())
-      case Success(HttpStatus.SC_OK) => Success(())
+      case Success(0) | Success(HttpStatus.SC_OK) => Success(())
       case Success(_) => Failure(SolrStatusException(response.getResponse))
-      case Failure(_: NullPointerException) => Success(())
+      case Failure(_: NullPointerException) => Success(()) // no status at all
       case Failure(t) => Failure(t)
     }
   }
