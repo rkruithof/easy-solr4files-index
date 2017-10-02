@@ -22,6 +22,7 @@ import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest
 import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.client.solrj.{ SolrClient, SolrRequest, SolrResponse }
+import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.common.util.NamedList
 
 import scala.collection.JavaConverters._
@@ -33,12 +34,16 @@ class ApplicationWiringSpec extends TestSupportFixture {
   private val uuid = "9da0541a-d2c8-432e-8129-979a9830b427"
 
   private class MockedAndStubbedWiring extends ApplicationWiring(createConfig("vault")) {
-    override lazy val solrClient = new SolrClient() {
+    override lazy val solrClient: SolrClient = new SolrClient() {
       // can't use mock because SolrClient has a final method, now we can't count the actual calls
 
       override def deleteByQuery(q: String): UpdateResponse = new UpdateResponse
 
       override def commit(): UpdateResponse = new UpdateResponse
+
+      override def  add(doc: SolrInputDocument): UpdateResponse = new UpdateResponse {
+        override def getStatus = 200
+      }
 
       override def close(): Unit = ()
 
@@ -75,9 +80,9 @@ class ApplicationWiringSpec extends TestSupportFixture {
   }
 
   "delete" should "call the stubbed solrClient.deleteByQuery" in {
-    val result = new MockedAndStubbedWiring().delete(uuid)
+    val result = new MockedAndStubbedWiring().delete("*:*")
     inside(result) { case Success(msg) =>
-      msg shouldBe s"Deleted file documents for bag $uuid"
+      msg shouldBe s"Deleted documents with query *:*"
     }
   }
 

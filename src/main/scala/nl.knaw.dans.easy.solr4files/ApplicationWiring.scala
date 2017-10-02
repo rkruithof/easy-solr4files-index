@@ -52,7 +52,7 @@ class ApplicationWiring(configuration: Configuration)
       ddmXML <- bag.loadDDM
       ddm = new DDM(ddmXML)
       filesXML <- bag.loadFilesXML
-      _ <- deleteBag(bag.bagId)
+      _ <- deleteDocuments(s"id:${bag.bagId}*")
       feedbackMessage <- updateFiles(bag, ddm, filesXML)
       _ <- commit()
     } yield feedbackMessage
@@ -63,11 +63,11 @@ class ApplicationWiring(configuration: Configuration)
     case t => Failure(t)
   }
 
-  def delete(bagId: String): Try[FeedBackMessage] = {
+  def delete(query: String): Try[FeedBackMessage] = {
     for {
-      _ <- deleteBag(bagId)
+      _ <- deleteDocuments(query)
       _ <- commit()
-    } yield s"Deleted file documents for bag $bagId"
+    } yield s"Deleted documents with query $query"
   }.recoverWith {
     case t: SolrCommitException => Failure(t)
     case t =>

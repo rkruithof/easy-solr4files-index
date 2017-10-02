@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
-import java.net.{ URI, URL }
+import java.net.{ URI, URL, URLEncoder }
 import java.nio.file.Paths
 
 import nl.knaw.dans.easy.solr4files._
@@ -46,6 +46,7 @@ trait Vault extends DebugEnhancedLogging {
   }
 
   def fileURL(storeName: String, bagId: String, file: String): Try[URL] = Try {
-    vaultBaseUri.resolve(s"stores/$storeName/bags/$bagId/$file").toURL
+    val f = URLEncoder.encode(file,"UTF8")
+    vaultBaseUri.resolve(s"stores/$storeName/bags/$bagId/$f").toURL
   }
 }

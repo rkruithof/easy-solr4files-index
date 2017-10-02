@@ -19,11 +19,13 @@ import java.net.URL
 
 import nl.knaw.dans.easy.solr4files._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.apache.http.HttpStatus
 import org.apache.solr.client.solrj.SolrRequest.METHOD
 import org.apache.solr.client.solrj.impl.HttpSolrClient
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest
 import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.client.solrj.{ SolrClient, SolrQuery }
+import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.common.util.{ ContentStreamBase, NamedList }
 
 import scala.language.postfixOps
@@ -36,61 +38,65 @@ trait Solr extends DebugEnhancedLogging {
   def createDoc(item: FileItem, size: Long): Try[FileFeedback] = {
     item.bag.fileUrl(item.path).flatMap { fileUrl =>
       val solrDocId = s"${ item.bag.bagId }/${ item.path }"
-      val request = new ContentStreamUpdateRequest("/update/extract") {
-        setWaitSearcher(false)
-        setMethod(METHOD.POST)
-        addContentStream(new ContentStreamBase.URLStream(fileUrl))
-        setParam("literal.id", solrDocId)
-        setParam("literal.easy_file_size", size.toString)
-        for ((key, value) <- item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals) {
-          if (value.trim.nonEmpty)
-            setParam(s"literal.easy_$key", value.replaceAll("\\s+", " ").trim)
+      val solrFields = (item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals :+ "file_size" -> size.toString)
+        .map { case (k, v) => (k, v.replaceAll("\\s+", " ").trim) }
+        .filter { case (_, v) => v.nonEmpty }
+      if (logger.underlying.isDebugEnabled) logger.debug(solrFields
+        .map { case (key, value) => s"$key = $value" }
+        .mkString("\n\t")
+      )
+      submitWithContent(fileUrl, solrDocId, solrFields)
+        .map(_ => FileSubmittedWithContent(solrDocId))
+        .recoverWith { case t =>
+          logger.warn(s"Submission with content of $solrDocId failed with ${ t.getMessage }", t)
+          resubmitMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithJustMetadata(solrDocId))
         }
-      }
-      submitRequest(solrDocId, request)
     }
   }
 
-  def deleteBag(bagId: String): Try[UpdateResponse] = {
-    // no status to check since UpdateResponse is a stub
-    Try(solrClient.deleteByQuery(createDeleteQuery(bagId)))
-      .recoverWith { case t => Failure(SolrDeleteException(bagId, t)) }
+  def deleteDocuments(query: String): Try[Unit] = {
+    Try(solrClient.deleteByQuery(new SolrQuery {set("q", query) }.getQuery))
+      .flatMap(checkUpdateResponseStatus)
+      .recoverWith { case t => Failure(SolrDeleteException(query, t)) }
   }
 
-  def commit(): Try[UpdateResponse] = {
-    // no status to check since UpdateResponse is a stub
+  def commit(): Try[Unit] = {
     Try(solrClient.commit())
+      .flatMap(checkUpdateResponseStatus)
       .recoverWith { case t => Failure(SolrCommitException(t)) }
   }
 
-  private def submitRequest(solrDocId: String, req: ContentStreamUpdateRequest): Try[FileFeedback] = {
-    logger.debug(req.getParams.getParameterNames.toArray()
-      .map(key => s"$key = ${ req.getParams.getParams(key.toString).toSeq.mkString(", ") }")
-      .mkString("\n\t")
-    )
-    executeUpdate(req)
-      .map(_ => FileSubmittedWithContent(solrDocId))
-      .recoverWith { case t =>
-        logger.warn(s"Submission with content of $solrDocId failed with ${ t.getMessage }", t)
-        req.getContentStreams.clear() // retry with just metadata
-        executeUpdate(req)
-          .map(_ => FileSubmittedWithJustMetadata(solrDocId))
-          .recoverWith {
-            case t2: SolrStatusException => Failure(t2)
-            case t2 => Failure(SolrUpdateException(solrDocId, t2))
-          }
+  private def submitWithContent(fileUrl: URL, solrDocId: String, solrFields: SolrLiterals) = {
+    Try(solrClient.request(new ContentStreamUpdateRequest("/update/extract") {
+      setWaitSearcher(false)
+      setMethod(METHOD.POST)
+      addContentStream(new ContentStreamBase.URLStream(fileUrl))
+      for ((k, v) <- solrFields) {
+        setParam(s"literal.easy_$k", v)
       }
+      setParam("literal.id", solrDocId)
+    })).flatMap(checkSolrStatus)
   }
 
-  private def executeUpdate(req: ContentStreamUpdateRequest): Try[Unit] = {
-    Try(solrClient.request(req))
-      .flatMap(checkSolrStatus)
+  private def resubmitMetadata(solrDocId: String, solrFields: SolrLiterals) = {
+    Try(solrClient.add(new SolrInputDocument() {
+      for ((k, v) <- solrFields) {
+        addField(s"easy_$k", v)
+      }
+      addField("id", solrDocId)
+    }))
+      .flatMap(checkUpdateResponseStatus)
+      .recoverWith { case t => Failure(SolrUpdateException(solrDocId, t)) }
   }
 
-  private def createDeleteQuery(bagId: String) = {
-    new SolrQuery {
-      set("q", s"id:$bagId/*")
-    }.getQuery
+  private def checkUpdateResponseStatus(response: UpdateResponse) = {
+    // this method hides the inconsistent design of the solr library from the rest of the code
+    Try(response.getStatus) match {
+      case Success(0) | Success(HttpStatus.SC_OK) => Success(())
+      case Success(_) => Failure(SolrStatusException(response.getResponse))
+      case Failure(_: NullPointerException) => Success(()) // no status at all
+      case Failure(t) => Failure(t)
+    }
   }
 
   private def checkSolrStatus(namedList: NamedList[AnyRef]) = {

@@ -40,10 +40,10 @@ package object solr4files extends DebugEnhancedLogging {
     extends Exception(s"$msg - ${ response.statusLine }, details: ${ response.body }")
 
   case class SolrStatusException(namedList: NamedList[AnyRef])
-    extends Exception(s"solr update returned: ${ namedList.asShallowMap().values().toArray().mkString }")
+    extends Exception(s"solr returned: ${ namedList.asShallowMap().values().toArray().mkString }")
 
-  case class SolrDeleteException(bagId: String, cause: Throwable)
-    extends Exception(s"solr delete of bag $bagId failed with ${ cause.getMessage }", cause)
+  case class SolrDeleteException(query: String, cause: Throwable)
+    extends Exception(s"solr delete [$query] failed with ${ cause.getMessage }", cause)
 
   case class SolrUpdateException(solrId: String, cause: Throwable)
     extends Exception(s"solr update of file $solrId failed with ${ cause.getMessage }", cause)
@@ -87,7 +87,7 @@ package object solr4files extends DebugEnhancedLogging {
   case class BagSubmitted(override val msg: String, results: Seq[FileFeedback]) extends Feedback(msg) {
     override def toString: String = {
       val xs = results.groupBy(_.getClass.getSimpleName)
-      s"Bag $msg: ${ xs.keySet.map(className => s"${ xs(className).size } times $className").mkString(", ")}"
+      s"Bag $msg: ${ xs.keySet.map(className => s"${ xs(className).size } times $className").mkString(", ") }"
     }
   }
 

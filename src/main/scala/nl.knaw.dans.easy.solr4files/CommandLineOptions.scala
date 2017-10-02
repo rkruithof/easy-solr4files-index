@@ -29,9 +29,17 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
   val description: String = s"""Update the EASY SOLR for Files Index with file data from a bag-store"""
   val synopsis: String =
     s"""
-       |  $printedName {update|delete} [-s <bag-store>] <uuid>
-       |  $printedName {init} <bag-store>
+       |  $printedName update [-s <bag-store>] <uuid>
+       |  $printedName init <bag-store>
        |  $printedName run-service
+       |  $printedName delete <solr-query>
+       |
+       |  Some examples of solr queries:
+       |
+       |    everything:            '*:*'
+       |    all bags of one store: 'easy_dataset_store_id:pdbs'
+       |    a bag:                 'easy_dataset_id:ef425828-e4ae-4d58-bf6a-c89cd46df61c'
+       |    a folder in a bag:     'id:ef425828-e4ae-4d58-bf6a-c89cd46df61c/data/files/Documents/*'
        """.stripMargin
 
   version(s"$printedName v${ configuration.version }")
@@ -59,8 +67,8 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
     footer(SUBCOMMAND_SEPARATOR)
   }
   val delete = new Subcommand("delete") {
-    descr("Delete all file documents of a bag from the SOLR index")
-    val bagUuid: ScallopOption[UUID] = trailArg(name = "bag-uuid", required = true)
+    descr("Delete documents from the SOLR index")
+    val query: ScallopOption[UUID] = trailArg(name = "solr-query", required = true)
     footer(SUBCOMMAND_SEPARATOR)
   }
   val init = new Subcommand("init") {

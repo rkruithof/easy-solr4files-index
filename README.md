@@ -6,9 +6,18 @@ easy-update-solr4files-index
 SYNOPSIS
 --------
 
-  easy-update-solr4files-index {update|delete} [-s <bag-store>] <uuid>
-  easy-update-solr4files-index {init} <bag-store>
-  easy-update-solr4files-index run-service
+    easy-update-solr4files-index update [-s <bag-store>] <uuid>
+    easy-update-solr4files-index init <bag-store>
+    easy-update-solr4files-index run-service
+    easy-update-solr4files-index delete <solr-query>
+    
+    Some examples of solr queries:
+    
+      everything:            '*:*'
+      all bags of one store: 'easy_dataset_store_id:pdbs'
+      a bag:                 'easy_dataset_id:ef425828-e4ae-4d58-bf6a-c89cd46df61c'
+      a folder in a bag:     'id:ef425828-e4ae-4d58-bf6a-c89cd46df61c/data/files/Documents/*'
+
 
 DESCRIPTION
 -----------
@@ -27,8 +36,8 @@ ARGUMENTS
 
     Options:
 
-        --help      Show help message
-        --version   Show version of this program
+      --help      Show help message
+      --version   Show version of this program
 
     Subcommand: update - Update accessible files of a bag in the SOLR index
       -s, --bag-store  <arg>   Name of the bag store (default = pdbs)
@@ -38,11 +47,11 @@ ARGUMENTS
       bag-uuid (required)
     ---
     
-    Subcommand: delete - Delete all file documents of a bag from the SOLR index
+    Subcommand: delete - Delete documents from the SOLR index
           --help   Show help message
     
      trailing arguments:
-      bag-uuid (required)
+      solr-query (required)
     ---
     
     Subcommand: init - Rebuild the SOLR index from scratch for active bags in one or all store(s)
