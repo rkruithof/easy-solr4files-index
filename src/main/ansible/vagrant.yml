@@ -67,6 +67,10 @@
       mode: "0775"
       directory_mode: "0775"
     when: "bag_dir_stat.stat.exists == False"
+    # TODO add test bag with:
+    #  a file with spaces and other special characters in its name
+    #  an image with dates that failed with https://github.com/DANS-KNAW/easy-dtap/pull/131
+    #  a pakbon and pdf with metadata that gets indexed as email_ss
 
   - service:
       name: "easy-bag-store"
@@ -104,6 +108,7 @@
       solr_version: "6.6.1"
       solr_package: "http://maven-repo.dans.knaw.nl/ext-release-local/org/apache/solr/{{ solr_version }}/solr-{{ solr_version }}.tgz"
 
+  # TODO fix problem that gives itself away with 'attr_' prefix for field names in the index
   - name: Copy schemas
     copy:
       src: "../assembly/dist/install/{{ item.name }}/schema.xml"
@@ -126,7 +131,7 @@
       name: "dans.knaw.nl-easy-update-solr4files-index"
       state: latest
 
-#  - service:
+#TODO  - service:
 #      name: "easy-update-solr4files-index"
 #      state: restarted
 #      enabled: yes
