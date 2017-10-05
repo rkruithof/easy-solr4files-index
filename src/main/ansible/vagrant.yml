@@ -55,12 +55,18 @@
       mode: "0775"
     with_items: "{{ bag_stores }}"
 
+  - name: Check whether the bags exist
+    stat:
+      path: "{{ stores_dir }}/pdbs/ab"
+    register: bag_dir_stat
+
   - name: Copy test-bags to server
     copy:
       src: "../../test/resources/vault/stores/pdbs/bags/"
       dest: "{{ stores_dir }}/pdbs/ab/123456789012345678901234567890"
       mode: "0775"
       directory_mode: "0775"
+    when: "bag_dir_stat.stat.exists == False"
 
   - service:
       name: "easy-bag-store"
