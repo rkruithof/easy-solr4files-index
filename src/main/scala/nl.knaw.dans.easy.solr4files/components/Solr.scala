@@ -19,12 +19,12 @@ import java.net.URL
 
 import nl.knaw.dans.easy.solr4files._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.http.HttpStatus
+import org.apache.http.HttpStatus._
 import org.apache.solr.client.solrj.SolrRequest.METHOD
 import org.apache.solr.client.solrj.impl.HttpSolrClient
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest
 import org.apache.solr.client.solrj.response.UpdateResponse
-import org.apache.solr.client.solrj.{ SolrClient, SolrQuery }
+import org.apache.solr.client.solrj.{ SolrClient, SolrQuery, SolrServerException }
 import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.common.util.{ ContentStreamBase, NamedList }
 
@@ -57,7 +57,14 @@ trait Solr extends DebugEnhancedLogging {
   def deleteDocuments(query: String): Try[Unit] = {
     Try(solrClient.deleteByQuery(new SolrQuery {set("q", query) }.getQuery))
       .flatMap(checkUpdateResponseStatus)
-      .recoverWith { case t => Failure(SolrDeleteException(query, t)) }
+      .recoverWith {
+        case t: HttpSolrClient.RemoteSolrException if t.getRootThrowable.endsWith("ParseException") =>
+          Failure(SolrBadRequestException(t.getMessage, t))
+        case t: SolrServerException =>
+          Failure(SolrDeleteException(query, t))
+        case t =>
+          Failure(SolrDeleteException(query, t))
+      }
   }
 
   def commit(): Try[Unit] = {
@@ -92,7 +99,7 @@ trait Solr extends DebugEnhancedLogging {
   private def checkUpdateResponseStatus(response: UpdateResponse) = {
     // this method hides the inconsistent design of the solr library from the rest of the code
     Try(response.getStatus) match {
-      case Success(0) | Success(HttpStatus.SC_OK) => Success(())
+      case Success(0) | Success(SC_OK) => Success(())
       case Success(_) => Failure(SolrStatusException(response.getResponse))
       case Failure(_: NullPointerException) => Success(()) // no status at all
       case Failure(t) => Failure(t)

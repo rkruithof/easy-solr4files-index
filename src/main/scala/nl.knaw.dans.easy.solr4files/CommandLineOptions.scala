@@ -15,10 +15,11 @@
  */
 package nl.knaw.dans.easy.solr4files
 
-import org.rogach.scallop.{ ScallopConf, ScallopOption, Subcommand }
+import java.util.UUID
+
+import org.rogach.scallop.{ ScallopConf, ScallopOption, Subcommand, ValueConverter, singleArgConverter }
 
 class CommandLineOptions(args: Array[String], configuration: Configuration) extends ScallopConf(args) {
-  type UUID = String
   type StoreName = String
 
   appendDefaultToDescription = true
@@ -56,6 +57,12 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
 
   private val defaultBagStore = Some(configuration.properties.getString("default.bag-store", "MISSING_BAG_STORE"))
 
+  private implicit def bagId: ValueConverter[UUID] = {
+    singleArgConverter {
+      case s => UUID.fromString(s)
+    }
+  }
+
   val update = new Subcommand("update") {
     descr("Update accessible files of a bag in the SOLR index")
     val bagStore: ScallopOption[StoreName] = opt[StoreName](
@@ -63,12 +70,12 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
       default = defaultBagStore,
       short = 's',
       descr = "Name of the bag store")
-    val bagUuid: ScallopOption[UUID] = trailArg(name = "bag-uuid", required = true)
+    val bagUuid: ScallopOption[UUID] = trailArg[UUID](name = "bag-uuid", required = true)
     footer(SUBCOMMAND_SEPARATOR)
   }
   val delete = new Subcommand("delete") {
     descr("Delete documents from the SOLR index")
-    val query: ScallopOption[UUID] = trailArg(name = "solr-query", required = true)
+    val query: ScallopOption[String] = trailArg[String](name = "solr-query", required = true)
     footer(SUBCOMMAND_SEPARATOR)
   }
   val init = new Subcommand("init") {

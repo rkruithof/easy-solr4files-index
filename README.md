@@ -19,6 +19,24 @@ SYNOPSIS
       a folder in a bag:     'id:ef425828-e4ae-4d58-bf6a-c89cd46df61c/data/files/Documents/*'
 
 
+### HTTP service
+
+When started with the sub-command `run-service` a REST API becomes available summarized in the following table.
+"Method" refers to the HTTP method used in the request. "Path" is the path pattern used. 
+Placeholders for variables start with a colon, optional parts are enclosed in square brackets.
+
+Method   | Path                             | Args |Action
+---------|----------------------------------|------|------------------------------------
+`GET`    | `/fileindex`                     |      | Return a simple message to indicate that the service is up: "EASY File index is running."
+`POST`   | `/fileindex/init[/:store]`       |      | Index all bag stores or just one. Eventual obsolete items are cleared.
+`POST`   | `/fileindex/update/:store/:uuid` |      | Index all files of one bag. Eventual obsolete file items are cleared.
+`DELETE` | `/fileindex/:store[/:uuid]`      |      | Remove all items or the items of a store or bag.
+`DELETE` | `/fileindex/`                    | q    | Remove the items matching the mandatory solr query.
+
+The following example would delete a bag
+
+    http://easy.dans.knaw.nl/fileindex/?q=easy_dataset_id:ef425828-e4ae-4d58-bf6a-c89cd46df61c
+
 DESCRIPTION
 -----------
 

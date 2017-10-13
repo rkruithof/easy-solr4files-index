@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Copyright (C) 2017 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
@@ -14,9 +15,15 @@
 # limitations under the License.
 #
 
-- src: https://github.com/DANS-KNAW/dans.local-yum-repo
-  version: v3.1.1
-- src: https://github.com/DANS-KNAW/dans.local-test-vm-base
-  version: v2.1.0
-- src: https://github.com/DANS-KNAW/dans.solr
-  version: 3.6.3-dans
+#include <service.sh>
+
+NUMBER_OF_INSTALLATIONS=$1
+MODULE_NAME=easy-update-solr4files-index
+INSTALL_DIR=/opt/dans.knaw.nl/$MODULE_NAME
+PHASE="POST-INSTALL"
+
+echo "$PHASE: START (Number of current installations: $NUMBER_OF_INSTALLATIONS)"
+service_install_initd_service_script "$INSTALL_DIR/install/$MODULE_NAME-initd.sh" $MODULE_NAME
+service_install_systemd_unit "$INSTALL_DIR/install/$MODULE_NAME.service" $MODULE_NAME "$INSTALL_DIR/install/override.conf"
+service_create_log_directory $MODULE_NAME
+echo "$PHASE: DONE"

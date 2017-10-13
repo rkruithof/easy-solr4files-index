@@ -15,7 +15,8 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
-import java.net.{ URL, URLEncoder }
+import java.net.URL
+import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files.{ FileToShaMap, SolrLiterals, _ }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -25,7 +26,7 @@ import scala.util.matching.Regex
 import scala.xml.Elem
 
 case class Bag(storeName: String,
-               bagId: String,
+               bagId: UUID,
                private val vault: Vault
               ) extends DebugEnhancedLogging {
 
@@ -47,7 +48,8 @@ case class Bag(storeName: String,
 
   // splits a string on the first sequence of white space after the sha
   // the rest is a path that might contain white space
-  private lazy val regex: Regex = """(\w+)\s+(.*)""".r()
+  private lazy val regex: Regex =
+  """(\w+)\s+(.*)""".r()
 
   private lazy val fileShas: FileToShaMap = {
     // gov.loc.repository.bagit.reader.ManifestReader reads files, we need URL or stream
@@ -75,6 +77,6 @@ case class Bag(storeName: String,
   val solrLiterals: SolrLiterals = Seq(
     ("dataset_store_id", storeName),
     ("dataset_depositor_id", getDepositor),
-    ("dataset_id", bagId)
+    ("dataset_id", bagId.toString)
   )
 }

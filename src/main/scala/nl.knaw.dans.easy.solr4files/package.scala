@@ -42,6 +42,9 @@ package object solr4files extends DebugEnhancedLogging {
   case class SolrStatusException(namedList: NamedList[AnyRef])
     extends Exception(s"solr returned: ${ namedList.asShallowMap().values().toArray().mkString }")
 
+  case class SolrBadRequestException(msg: String, cause: Throwable)
+    extends Exception(msg, cause)
+
   case class SolrDeleteException(query: String, cause: Throwable)
     extends Exception(s"solr delete [$query] failed with ${ cause.getMessage }", cause)
 
@@ -149,6 +152,17 @@ package object solr4files extends DebugEnhancedLogging {
       }
     }.doIfFailure { case e => logger.warn(e.getMessage, e) }
       .getOrElse(-1L)
+  }
+
+  implicit class TryExtensions2[T](val t: Try[T]) extends AnyVal {
+    // copied from easy-bag-store
+    // TODO candidate for dans-scala-lib
+    def unsafeGetOrThrow: T = {
+      t match {
+        case Success(value) => value
+        case Failure(throwable) => throw throwable
+      }
+    }
   }
 }
 

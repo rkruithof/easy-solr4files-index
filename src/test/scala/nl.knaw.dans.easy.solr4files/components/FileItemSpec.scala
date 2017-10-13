@@ -15,13 +15,15 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
+import java.util.UUID
+
 import nl.knaw.dans.easy.solr4files.TestSupportFixture
 
 class FileItemSpec extends TestSupportFixture {
 
   private val bag = Bag(
     "pdbs",
-    "9da0541a-d2c8-432e-8129-979a9830b427",
+    UUID.fromString("9da0541a-d2c8-432e-8129-979a9830b427"),
     mockVault("vault")
   )
 

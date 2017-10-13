@@ -16,6 +16,7 @@
 package nl.knaw.dans.easy.solr4files
 
 import java.net.{ URI, URL }
+import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files.components._
 import nl.knaw.dans.lib.error._
@@ -46,13 +47,13 @@ class ApplicationWiring(configuration: Configuration)
       .flatMap(updateBags(storeName, _))
   }
 
-  def update(storeName: String, bagId: String): Try[BagSubmitted] = {
+  def update(storeName: String, bagId: UUID): Try[BagSubmitted] = {
     val bag = Bag(storeName, bagId, this)
     for {
       ddmXML <- bag.loadDDM
       ddm = new DDM(ddmXML)
       filesXML <- bag.loadFilesXML
-      _ <- deleteDocuments(s"id:${bag.bagId}*")
+      _ <- deleteDocuments(s"id:${ bag.bagId }*")
       feedbackMessage <- updateFiles(bag, ddm, filesXML)
       _ <- commit()
     } yield feedbackMessage
@@ -98,7 +99,7 @@ class ApplicationWiring(configuration: Configuration)
    * The number of files submitted with or without content per bag are logged as info
    * if and when another bag in the same store failed.
    */
-  private def updateBags(storeName: String, bagIds: Seq[String]): Try[StoreSubmitted] = {
+  private def updateBags(storeName: String, bagIds: Seq[UUID]): Try[StoreSubmitted] = {
     bagIds
       .toStream
       .map(update(storeName, _))
@@ -120,6 +121,6 @@ class ApplicationWiring(configuration: Configuration)
       .map(f => createDoc(f, getSize(f.bag.storeName, f.bag.bagId, f.path)))
       .takeUntilFailure
       .doIfFailure { case MixedResultsException(results: Seq[_], _) => results.foreach(fb => logger.info(fb.toString)) }
-      .map(results => BagSubmitted(bag.bagId, results))
+      .map(results => BagSubmitted(bag.bagId.toString, results))
   }
 }
