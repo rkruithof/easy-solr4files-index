@@ -33,7 +33,8 @@ class EasyUpdateSolr4filesIndexService(val serverPort: Int, app: EasyUpdateSolr4
         override def probeForCycleClass(classLoader: ClassLoader): (String, LifeCycle) = {
           ("Solr4files-lifecycle", new LifeCycle {
             override def init(context: ServletContext): Unit = {
-              context.mount(new EasyUpdateSolr4filesIndexServlet(app), "/fileindex")
+              context.mount(new UpdateServlet(app), "/fileindex")
+              context.mount(new SearchServlet(app), "/filesearch")
             }
           })
         }

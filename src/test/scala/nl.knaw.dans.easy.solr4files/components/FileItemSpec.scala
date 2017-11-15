@@ -21,13 +21,10 @@ import nl.knaw.dans.easy.solr4files.TestSupportFixture
 
 class FileItemSpec extends TestSupportFixture {
 
-  private val bag = Bag(
-    "pdbs",
-    UUID.fromString("9da0541a-d2c8-432e-8129-979a9830b427"),
-    mockVault("vault")
-  )
+  private val centaurBag = Bag("pdbs", uuidCentaur, mockedVault)
 
   "solrLiteral" should "return proper values" in {
+    initVault()
     val xml = <file filepath="data/reisverslag/centaur.mpg">
       <dcterms:type>http://schema.org/VideoObject</dcterms:type>
       <dcterms:format>video/mpeg</dcterms:format>
@@ -37,7 +34,7 @@ class FileItemSpec extends TestSupportFixture {
       <dcterms:relation xml:lang="nl">data/reisverslag/centaur-nederlands.srt</dcterms:relation>
     </file>
 
-    val fi = FileItem(bag, ddm("OPEN_ACCESS"), xml)
+    val fi = FileItem(centaurBag, ddm("OPEN_ACCESS"), xml)
     fi.mimeType shouldBe "video/mpeg"
     fi.path shouldBe "data/reisverslag/centaur.mpg"
 
@@ -49,19 +46,19 @@ class FileItemSpec extends TestSupportFixture {
   }
 
   it should "use the dataset rights as default" in {
-    val solrLiterals = FileItem(bag, ddm("OPEN_ACCESS"), <file filepath="p"/>)
+    val solrLiterals = FileItem(centaurBag, ddm("OPEN_ACCESS"), <file filepath="p"/>)
       .solrLiterals.toMap
     solrLiterals("file_accessible_to") shouldBe "ANONYMOUS"
   }
 
   it should "also use the dataset rights as default" in {
-    val item = FileItem(bag, ddm("OPEN_ACCESS_FOR_REGISTERED_USERS"), <file filepath="p"/>)
+    val item = FileItem(centaurBag, ddm("OPEN_ACCESS_FOR_REGISTERED_USERS"), <file filepath="p"/>)
     val solrLiterals = item.solrLiterals.toMap
     solrLiterals("file_accessible_to") shouldBe "KNOWN"
   }
 
   it should "not have read the lazy files in case of accessible to none" ignore { // TODO
-    val item = FileItem(bag, ddm("NO_ACCESS"), <file filepath="p"/>)
+    val item = FileItem(centaurBag, ddm("NO_ACCESS"), <file filepath="p"/>)
 
     // The bag.sha's and ddm.vocabularies are private
     // so we need side effects, not something like https://stackoverflow.com/questions/1651927/how-to-unit-test-for-laziness

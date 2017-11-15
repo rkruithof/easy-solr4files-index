@@ -15,8 +15,10 @@
  */
 package nl.knaw.dans.easy.solr4files
 
+import java.io.File
 import java.net.{ HttpURLConnection, URI, URL, URLEncoder }
 import java.nio.file.{ Files, Path, Paths }
+import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files.components.Vault
 import org.apache.commons.configuration.PropertiesConfiguration
@@ -34,19 +36,29 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     path
   }
 
-  def createConfig(testVault: String): Configuration = {
-    val vault = mockVault(testVault)
+  val uuidCentaur = UUID.fromString("9da0541a-d2c8-432e-8129-979a9830b427")
+  val uuidAnonymized = UUID.fromString("1afcc4e9-2130-46cc-8faf-2663e199b218")
+
+  val mockedVault: Vault = new Vault {
+    // vault/stores is sometimes a folder, sometimes a dir
+    private val vaultBaseDir = URLEncoder.encode(testDir.resolve("vault").toAbsolutePath.toString, "UTF8")
+    override val vaultBaseUri = new URI(s"file:///$vaultBaseDir/")
+  }
+
+  val configWithMockedVault: Configuration = {
     new Configuration("", new PropertiesConfiguration() {
       addProperty("solr.url", "http://deasy.dans.knaw.nl:8983/solr/easyfiles")
-      addProperty("vault.url", vault.vaultBaseUri.toURL.toString)
+      addProperty("vault.url", mockedVault.vaultBaseUri.toURL.toString)
     })
   }
 
-  def mockVault(testVault: String): Vault = new Vault {
-    // testVault/store is sometimes a folder, sometimes a dir and most importantly used read-only
-    // no need to copy into testDir/vault used as vaultBaseDir
-    private val vaultBaseDir = URLEncoder.encode(Paths.get(s"src/test/resources/$testVault").toAbsolutePath.toString, "UTF8")
-    override val vaultBaseUri = new URI(s"file:///$vaultBaseDir/")
+  def clearVault(): Unit = {
+    FileUtils.deleteDirectory(testDir.resolve("vault").toFile)
+  }
+
+  def initVault(): Unit = {
+    clearVault()
+    FileUtils.copyDirectory(new File("src/test/resources/vault"), testDir.resolve("vault").toFile)
   }
 
   /** assume(canConnectToEasySchemas) allows to build when offline */

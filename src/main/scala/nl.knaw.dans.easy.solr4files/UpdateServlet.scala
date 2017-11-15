@@ -25,7 +25,7 @@ import org.scalatra._
 import scala.util.Try
 import scalaj.http.HttpResponse
 
-class EasyUpdateSolr4filesIndexServlet(app: EasyUpdateSolr4filesIndexApp) extends ScalatraServlet with DebugEnhancedLogging {
+class UpdateServlet(app: EasyUpdateSolr4filesIndexApp) extends ScalatraServlet with DebugEnhancedLogging {
   logger.info("File index Servlet running...")
 
   get("/") {
@@ -45,7 +45,7 @@ class EasyUpdateSolr4filesIndexServlet(app: EasyUpdateSolr4filesIndexApp) extend
         case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_NOT_FOUND => NotFound(msgPrefix + message)
         case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_SERVICE_UNAVAILABLE => ServiceUnavailable(msgPrefix + message)
         case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_REQUEST_TIMEOUT => RequestTimeout(msgPrefix + message)
-        case e => InternalServerError(e.getMessage) // TODO no or neutral message for to be implemented public search
+        case e => InternalServerError(e.getMessage)
       }
   }
 
@@ -84,6 +84,6 @@ class EasyUpdateSolr4filesIndexServlet(app: EasyUpdateSolr4filesIndexApp) extend
   delete("/") {
     params.get("q")
       .map(q => respond(app.delete(q)))
-      .getOrElse(BadRequest(s"delete requires param 'q': a solr query"))
+      .getOrElse(BadRequest("delete requires param 'q', got " + params.asString))
   }
 }

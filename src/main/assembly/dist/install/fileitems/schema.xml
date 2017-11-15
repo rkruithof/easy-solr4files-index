@@ -194,6 +194,7 @@
     <!-- note that audience is a 'code', the readable labels are placed in easy_dataset_subject -->
     <field name="easy_dataset_audience" type="string" indexed="true" stored="true" required="true" multiValued="true"/>
     <!-- not required -->
+    <field name="easy_dataset_date_available" type="date" indexed="true" stored="true" multiValued="false"/>
     <field name="easy_file_title" type="text_general" indexed="true" stored="true"/>
     <field name="easy_dataset_relation" type="text_general" indexed="true" stored="true" multiValued="true"/>
     <field name="easy_dataset_identifier" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -302,15 +303,10 @@
 
     <!-- EASY field copying -->
     <!-- dataset fields -->
-    <!-- only use dataset information for restricting a search, so don't copy it to text
-    <copyField source="easy_dataset_title" dest="text"/>
-    <copyField source="easy_dataset_creator" dest="text"/>
-    <copyField source="easy_dataset_relation" dest="text"/>
-    <copyField source="easy_dataset_subject" dest="text"/>
-    <copyField source="easy_dataset_coverage" dest="text"/>
-    -->
-    <!-- the file path might contain important words for the finding the file -->
+    <!-- only use dataset information for restricting a search, so don't copy all to text -->
+    <!-- The file path might contain important words for the finding the file -->
     <copyField source="easy_file_path" dest="text"/>
+    <!-- End of EASY field copying -->
 
     <!-- Text fields from SolrCell to search by default in our catch-all field -->
     <copyField source="title" dest="text"/>
@@ -859,16 +855,17 @@
     </fieldType>
 
     <!-- Kurdish -->
+    <!-- Disable, these stop words are not available in the default config
     <fieldType name="text_ckb" class="solr.TextField" positionIncrementGap="100">
-        <analyzer>
-            <tokenizer class="solr.StandardTokenizerFactory"/>
-            <filter class="solr.SoraniNormalizationFilterFactory"/>
-            <!-- for any latin text -->
-            <filter class="solr.LowerCaseFilterFactory"/>
-            <filter class="solr.StopFilterFactory" ignoreCase="true" words="lang/stopwords_ckb.txt"/>
-            <filter class="solr.SoraniStemFilterFactory"/>
-        </analyzer>
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.SoraniNormalizationFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="lang/stopwords_ckb.txt"/>
+        <filter class="solr.SoraniStemFilterFactory"/>
+      </analyzer>
     </fieldType>
+    -->
 
     <!-- Czech -->
     <fieldType name="text_cz" class="solr.TextField" positionIncrementGap="100">

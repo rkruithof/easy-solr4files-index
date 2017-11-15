@@ -48,8 +48,27 @@ object Command extends App with DebugEnhancedLogging {
         case init @ commandLine.init => init.bagStore.toOption
           .map(app.initSingleStore)
           .getOrElse(app.initAllStores())
-        case commandLine.runService => Failure(new NotImplementedError())
+        case commandLine.runService => runAsService()
       }
       .getOrElse(Failure(new IllegalArgumentException(s"Unknown command: ${ commandLine.subcommand }")))
+  }
+
+  private def runAsService(): Try[FeedBackMessage] = Try {
+    val server = new EasyUpdateSolr4filesIndexService(configuration.properties.getInt("solr4files.daemon.http.port"), app)
+    Runtime.getRuntime.addShutdownHook(new Thread("service-shutdown") {
+      override def run(): Unit = {
+        logger.info("Stopping service ...")
+        (for {
+          _ <- server.stop()
+          _ = logger.info("Cleaning up ...")
+          _ <- server.destroy()
+        } yield logger.info("Service stopped.")).unsafeGetOrThrow
+      }
+    })
+
+    server.start()
+    logger.info("Service started ...")
+    Thread.currentThread.join()
+    "Service terminated normally."
   }
 }

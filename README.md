@@ -1,6 +1,17 @@
 easy-update-solr4files-index
-===========
+============================
 [![Build Status](https://travis-ci.org/DANS-KNAW/easy-update-solr4files-index.png?branch=master)](https://travis-ci.org/DANS-KNAW/easy-update-solr4files-index)
+
+* [SYNOPSIS](#synopsis)
+  + [HTTP service](#http-service)
+* [DESCRIPTION](#description)
+* [ARGUMENTS](#arguments)
+* [EXAMPLES](#examples)
+* [INSTALLATION AND CONFIGURATION](#installation-and-configuration)
+  + [Prerequisites](#prerequisites)
+  + [steps](#steps)
+  + [Security advice](#security-advice)
+* [BUILDING FROM SOURCE](#building-from-source)
 
 
 SYNOPSIS
@@ -11,7 +22,7 @@ SYNOPSIS
     easy-update-solr4files-index run-service
     easy-update-solr4files-index delete <solr-query>
     
-    Some examples of solr queries:
+    Some examples of [standard] solr queries for the delete command:
     
       everything:            '*:*'
       all bags of one store: 'easy_dataset_store_id:pdbs'
@@ -25,17 +36,25 @@ When started with the sub-command `run-service` a REST API becomes available sum
 "Method" refers to the HTTP method used in the request. "Path" is the path pattern used. 
 Placeholders for variables start with a colon, optional parts are enclosed in square brackets.
 
-Method   | Path                             | Args |Action
----------|----------------------------------|------|------------------------------------
-`GET`    | `/fileindex`                     |      | Return a simple message to indicate that the service is up: "EASY File index is running."
-`POST`   | `/fileindex/init[/:store]`       |      | Index all bag stores or just one. Eventual obsolete items are cleared.
-`POST`   | `/fileindex/update/:store/:uuid` |      | Index all files of one bag. Eventual obsolete file items are cleared.
-`DELETE` | `/fileindex/:store[/:uuid]`      |      | Remove all items or the items of a store or bag.
-`DELETE` | `/fileindex/`                    | q    | Remove the items matching the mandatory solr query.
+Method   | Path                             | Args  |Action
+---------|----------------------------------|-------|------------------------------------
+`GET`    | `/fileindex`                     |       | Return a simple message to indicate that the service is up: "EASY File index is running."
+`POST`   | `/fileindex/init[/:store]`       |       | Index all bag stores or just one. Eventual obsolete items are cleared.
+`POST`   | `/fileindex/update/:store/:uuid` |       | Index all files of one bag. Eventual obsolete file items are cleared.
+`DELETE` | `/fileindex/:store[/:uuid]`      |       | Remove all items or the items of a store or bag.
+`DELETE` | `/fileindex/`                    | q     | Remove the items matching the mandatory [standard] solr query.
+`GET`    | `/filesearch`                    |       | Return indexed metadata. Not known arguments are ignored. Defaults are used for optional arguments with invalid values.
+         |                                  | text  | Mandatory, a [dismax] query.
+         |                                  | skip  | Optional, default 0 (zero), the number of rows of the query result to skip in the response.
+         |                                  | limit | Optional, default 10, the maximum number of rows to return in the response.
 
-The following example would delete a bag
+The following example would delete a bag from the index
 
-    http://easy.dans.knaw.nl/fileindex/?q=easy_dataset_id:ef425828-e4ae-4d58-bf6a-c89cd46df61c
+    curl -X DELETE 'http://easy.dans.knaw.nl/fileindex/?q=easy_dataset_id:ef425828-e4ae-4d58-bf6a-c89cd46df61c'
+    
+[dismax]: https://lucene.apache.org/solr/guide/6_6/the-dismax-query-parser.html#the-dismax-query-parser
+[standard]: https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html
+
 
 DESCRIPTION
 -----------
@@ -92,6 +111,19 @@ EXAMPLES
 INSTALLATION AND CONFIGURATION
 ------------------------------
 
+### Prerequisites
+
+* [easy-bag-store](https://github.com/DANS-KNAW/easy-bag-store/)
+* [dans.solr](https://github.com/DANS-KNAW/dans.solr)
+* [dans.easy-ldap-dir](https://github.com/DANS-KNAW/dans.easy-ldap-dir)
+* A [Solr core](src/main/assembly/dist/install/fileitems),
+  installed for example with with [vagrant.yml](src/main/ansible/vagrant.yml).
+  Thus a web-ui comes available for administrators with `http://localhost:8983/solr/#/fileitems/query`.
+  A command line example:
+
+        curl 'http://test.dans.knaw.nl:8983/solr/fileitems/query?q=*&fl=*'
+
+### Steps
 
 1. Unzip the tarball to a directory of your choice, typically `/usr/local/`
 2. A new directory called easy-update-solr4files-index-<version> will be created
@@ -100,10 +132,16 @@ INSTALLATION AND CONFIGURATION
    
         ln -s /usr/local/easy-update-solr4files-index-<version>/bin/easy-update-solr4files-index /usr/bin
 
-
-
 General configuration settings can be set in `cfg/application.properties` and logging can be configured
 in `cfg/logback.xml`. The available settings are explained in comments in aforementioned files.
+
+
+### Security advice
+
+Keep the admin interface (command line and `fileindex` servlet)
+and any other direct access to solr, the bag store and ldap behind a firewall.
+Only expose the `filesearch` servlet through a proxy, map for example:
+`http://easy.dans.knaw.nl/files/search` to `http://localhost:20150/filesearch` 
 
 
 BUILDING FROM SOURCE

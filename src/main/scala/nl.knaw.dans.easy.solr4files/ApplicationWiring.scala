@@ -17,11 +17,15 @@ package nl.knaw.dans.easy.solr4files
 
 import java.net.{ URI, URL }
 import java.util.UUID
+import javax.naming.Context
+import javax.naming.ldap.{ InitialLdapContext, LdapContext }
 
 import nl.knaw.dans.easy.solr4files.components._
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.apache.commons.configuration.PropertiesConfiguration
 
+import scala.collection.JavaConverters._
 import scala.util.{ Failure, Try }
 import scala.xml.Elem
 
@@ -31,11 +35,29 @@ import scala.xml.Elem
  * @param configuration the application configuration
  */
 class ApplicationWiring(configuration: Configuration)
-  extends DebugEnhancedLogging with Vault with Solr {
+  extends DebugEnhancedLogging
+    with Vault
+    with Solr
+    with LdapAuthenticationComponent {
+
+  private val properties: PropertiesConfiguration = configuration.properties
+  override val authentication: Authentication = new LdapAuthentication {}
+  override val ldapUsersEntry: String = properties.getString("ldap.users-entry")
+  override val ldapProviderUrl: String = properties.getString("ldap.provider.url")
+  override val ldapContext: Try[LdapContext] = Try { // TODO fail at service startup
+    val env = new java.util.Hashtable[String, String] {
+      put(Context.SECURITY_AUTHENTICATION, "simple")
+      put(Context.SECURITY_PRINCIPAL, properties.getString("ldap.securityPrincipal"))
+      put(Context.SECURITY_CREDENTIALS, properties.getString("ldap.securityCredentials"))
+      put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
+      put(Context.PROVIDER_URL, ldapProviderUrl)
+    }
+    new InitialLdapContext(env, null)
+  }
 
   // don't need resolve for solr, URL gives more early errors TODO perhaps not yet at service startup once implemented
-  override val solrUrl: URL = new URL(configuration.properties.getString("solr.url", ""))
-  override val vaultBaseUri: URI = new URI(configuration.properties.getString("vault.url", ""))
+  override val solrUrl: URL = new URL(properties.getString("solr.url", ""))
+  override val vaultBaseUri: URI = new URI(properties.getString("vault.url", ""))
 
   def initAllStores(): Try[FeedBackMessage] = {
     getStoreNames

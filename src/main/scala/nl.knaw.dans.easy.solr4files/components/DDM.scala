@@ -20,6 +20,8 @@ import java.net.URL
 import nl.knaw.dans.easy.solr4files._
 import nl.knaw.dans.easy.solr4files.components.DDM._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -39,6 +41,7 @@ class DDM(xml: Node) extends DebugEnhancedLogging {
     (profile \ "title").map(simlpeText(_, "dataset_title")) ++
     (profile \ "creator").map(simlpeText(_, "dataset_creator")) ++
     (profile \ "creatorDetails").map(nestedText(_, "dataset_creator")) ++
+    (profile \ "available").map(date(_, "dataset_date_available")) ++
     (dcmiMetadata \ "identifier").withFilter(_.hasType("id-type:DOI")).map(simlpeText(_, "dataset_doi")) ++
     (dcmiMetadata \ "identifier").withFilter(!_.hasType("id-type:DOI")).map(typedID(_, "dataset_identifier")) ++
     (profile \ "audience").flatMap(n => Seq(
@@ -75,6 +78,9 @@ class DDM(xml: Node) extends DebugEnhancedLogging {
 }
 
 object DDM {
+
+  // https://lucene.apache.org/solr/guide/6_6/working-with-dates.html#working-with-dates
+  private val solrDateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
 
   private val abrPrefix = "abr:ABR"
 
@@ -113,6 +119,10 @@ object DDM {
     (solrField, n.text)
   }
 
+  private def date(n: Node, solrField: String): (String, String) = {
+    // a corrupt bag can cause an IllegalArgumentException
+    (solrField, solrDateFormatter.print(new DateTime(n.text)) + "T00:00:00Z")
+  }
 
   private def nestedText(ns: Seq[Node], solrField: String): (String, String) = {
     val result: ListBuffer[String] = ListBuffer.empty

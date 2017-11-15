@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ddm:DDM xsi:schemaLocation="http://easy.dans.knaw.nl/schemas/md/ddm/ https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd" xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dct="http://purl.org/dc/terms/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcx="http://easy.dans.knaw.nl/schemas/dcx/" xmlns:dcx-dai="http://easy.dans.knaw.nl/schemas/dcx/dai/" xmlns:dcx-gml="http://easy.dans.knaw.nl/schemas/dcx/gml/" xmlns:narcis="http://easy.dans.knaw.nl/schemas/vocab/narcis-type/" xmlns:abr="http://www.den.nl/standaard/166/Archeologisch-Basisregister/" xmlns:id-type="http://easy.dans.knaw.nl/schemas/vocab/identifier-type/">
+    <ddm:profile>
+        <dc:title>Problems in the past.</dc:title>
+        <dcterms:description>
+            Problematic file names.
+            A pakbon (with e-mail addresses !) from example input of https://www.sikb.nl/doc/OS17/Deel%20A%20Specificatie%20Pakbon%2020120604%20versie%201.2.1.pdf
+            Hidden metadata in a PDF revealed by the index.
+            Image date not accepted by the solr configuration of https://github.com/DANS-KNAW/easy-dtap/pull/131.
+            Metadata files and manifests are just valid enough to get indexed by the test-VM, not suitable to ingest in a real bagstore.
+        </dcterms:description>
+        <dcx-dai:creatorDetails>
+            <dcx-dai:author>
+                <dcx-dai:titles>M.</dcx-dai:titles>
+                <dcx-dai:initials>E.D.E</dcx-dai:initials>
+                <dcx-dai:surname>Werker</dcx-dai:surname>
+                <dcx-dai:organization>
+                    <dcx-dai:name xml:lang="en">Dans</dcx-dai:name>
+                </dcx-dai:organization>
+            </dcx-dai:author>
+        </dcx-dai:creatorDetails>
+        <ddm:created>2017-08-05</ddm:created>
+        <ddm:available>2017-08-05</ddm:available>
+        <ddm:audience>D37000</ddm:audience>
+        <ddm:accessRights>OPEN_ACCESS</ddm:accessRights>
+    </ddm:profile>
+    <ddm:dcmiMetadata>
+        <dct:identifier xsi:type="id-type:DOI">10.5072/dans-x6g-x2hb</dct:identifier>
+    </ddm:dcmiMetadata>
+</ddm:DDM>

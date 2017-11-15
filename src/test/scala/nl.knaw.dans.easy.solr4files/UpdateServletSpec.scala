@@ -38,7 +38,7 @@ class UpdateServletSpec extends TestSupportFixture
     }
   } with EasyUpdateSolr4filesIndexApp(new ApplicationWiring(new Configuration("", properties)))
   private val app = mock[App]
-  addServlet(new EasyUpdateSolr4filesIndexServlet(app), "/*")
+  addServlet(new UpdateServlet(app), "/*")
 
   private val uuid = UUID.randomUUID()
 
@@ -145,7 +145,14 @@ class UpdateServletSpec extends TestSupportFixture
 
   it should "complain about the required query" in {
     delete("/") {
-      body shouldBe "delete requires param 'q': a solr query"
+      body shouldBe "delete requires param 'q', got no params at all"
+      status shouldBe SC_BAD_REQUEST
+    }
+  }
+
+  it should "show params received" in {
+    delete("/?skip") {
+      body shouldBe "delete requires param 'q', got params [skip -> ]"
       status shouldBe SC_BAD_REQUEST
     }
   }

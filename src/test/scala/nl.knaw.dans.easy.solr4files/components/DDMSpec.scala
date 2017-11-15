@@ -21,12 +21,10 @@ import nl.knaw.dans.easy.solr4files.{ TestSupportFixture, _ }
 
 class DDMSpec extends TestSupportFixture {
 
-  private val vault = mockVault("vault")
-
   "solrLiteral" should "return proper values" in {
+    initVault()
     assume(canConnectToEasySchemas)
-    val uuid = UUID.fromString("9da0541a-d2c8-432e-8129-979a9830b427")
-    val xml = vault.fileURL("pdbs", uuid, "metadata/dataset.xml").flatMap(_.loadXml).getOrElse(<ddm/>)
+    val xml = mockedVault.fileURL("pdbs", uuidCentaur, "metadata/dataset.xml").flatMap(_.loadXml).getOrElse(<ddm/>)
 
     val ddm = new DDM(xml)
     ddm.accessRights shouldBe "OPEN_ACCESS"
@@ -40,6 +38,7 @@ class DDMSpec extends TestSupportFixture {
       ("dataset_identifier", "easy-dataset:14"),
       ("dataset_identifier", "ds1"),
       ("dataset_audience", "D30000"),
+      ("dataset_date_available", "1992-07-30T00:00:00Z"),
       ("dataset_subject", "Humanities"),
       ("dataset_relation", "dummy"),
       ("dataset_relation", "blabla"),

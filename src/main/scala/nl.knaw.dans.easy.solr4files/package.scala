@@ -22,6 +22,7 @@ import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.io.FileUtils.readFileToString
 import org.apache.solr.common.util.NamedList
+import org.scalatra
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -39,6 +40,20 @@ package object solr4files extends DebugEnhancedLogging {
   case class HttpStatusException(msg: String, response: HttpResponse[String])
     extends Exception(s"$msg - ${ response.statusLine }, details: ${ response.body }")
 
+  case class InvalidUserPasswordException(userName: String, cause: Throwable)
+    extends Exception(s"invalid credentials for $userName") {
+    logger.info(s"invalid credentials for $userName: ${ cause.getMessage }", cause)
+  }
+
+  case class AuthorisationNotAvailableException(cause: Throwable)
+    extends Exception(cause.getMessage, cause) {
+    logger.info(cause.getLocalizedMessage, cause)
+  }
+  case class AuthorisationTypeNotSupportedException(cause: Throwable)
+    extends Exception(cause.getMessage, cause) {
+    logger.info(cause.getLocalizedMessage, cause)
+  }
+
   case class SolrStatusException(namedList: NamedList[AnyRef])
     extends Exception(s"solr returned: ${ namedList.asShallowMap().values().toArray().mkString }")
 
@@ -47,6 +62,9 @@ package object solr4files extends DebugEnhancedLogging {
 
   case class SolrDeleteException(query: String, cause: Throwable)
     extends Exception(s"solr delete [$query] failed with ${ cause.getMessage }", cause)
+
+  case class SolrSearchException(query: String, cause: Throwable)
+    extends Exception(s"solr query [$query] failed with ${ cause.getMessage }", cause)
 
   case class SolrUpdateException(solrId: String, cause: Throwable)
     extends Exception(s"solr update of file $solrId failed with ${ cause.getMessage }", cause)
@@ -57,7 +75,6 @@ package object solr4files extends DebugEnhancedLogging {
   case class MixedResultsException[T](results: Seq[T], thrown: Throwable)
   // TODO evolve into candidate for dans.lib.error with takeUntilFailure
     extends Exception(thrown.getMessage, thrown)
-
   implicit class RichTryStream[T](val left: Seq[Try[T]]) extends AnyVal {
 
     /** Typical usage: toStream.map(TrySomething).takeUntilFailure */
@@ -92,6 +109,11 @@ package object solr4files extends DebugEnhancedLogging {
       val xs = results.groupBy(_.getClass.getSimpleName)
       s"Bag $msg: ${ xs.keySet.map(className => s"${ xs(className).size } times $className").mkString(", ") }"
     }
+  }
+
+  implicit class RichParams(val left: scalatra.Params) extends AnyVal {
+    def asString: String = if (left.isEmpty) "no params at all"
+                           else "params " + left.mkString("[", ",", "]")
   }
 
   val xsiURI = "http://www.w3.org/2001/XMLSchema-instance"

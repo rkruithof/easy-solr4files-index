@@ -7,6 +7,7 @@
         <dcterms:accessRights>RESTRICTED_GROUP</dcterms:accessRights>
     </file>
     <file filepath="data/reisverslag/centaur-nederlands.srt">
+        <dcterms:accessRights>RESTRICTED_GROUP</dcterms:accessRights>
         <dcterms:format>text/plain</dcterms:format>
     </file>
     <file filepath="data/reisverslag/centaur.mpg">
@@ -18,6 +19,7 @@
         <dcterms:relation xml:lang="nl">data/reisverslag/centaur-nederlands.srt</dcterms:relation>
     </file>
     <file filepath="data/reisverslag/centaur.srt">
+        <dcterms:accessRights>RESTRICTED_GROUP</dcterms:accessRights>
         <dcterms:format>text/plain</dcterms:format>
     </file>
     <file filepath="data/reisverslag/deel01.docx">

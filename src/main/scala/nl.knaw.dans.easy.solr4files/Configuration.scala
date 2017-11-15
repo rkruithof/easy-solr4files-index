@@ -36,7 +36,10 @@ object Configuration {
 
     new Configuration(
       version = managed(Source.fromFile(home.resolve("bin/version").toFile)).acquireAndGet(_.mkString),
-      properties = new PropertiesConfiguration(cfgPath.resolve("application.properties").toFile)
+      properties = new PropertiesConfiguration() {
+        setDelimiterParsingDisabled(true)
+        load(cfgPath.resolve("application.properties").toFile)
+      }
     )
   }
 }
