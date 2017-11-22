@@ -77,17 +77,16 @@ trait Solr extends DebugEnhancedLogging {
 
 
   private def toJson(solrDocumentList: SolrDocumentList, query: SolrQuery): String = {
-    val numFound = solrDocumentList.getNumFound
-    val fileItems = (0L until numFound).map { i =>
+    val fileItems = (0L until solrDocumentList.size()).map { i =>
       solrDocumentList.get(i.toInt).getFieldValueMap.toJObject
     }
     val result =
-      ("header" -> (
+      ("summary" -> (
         ("text" -> query.getQuery) ~
           ("skip" -> query.getStart.toInt) ~
           ("limit" -> query.getRows.toInt) ~
           ("time_allowed" -> query.getTimeAllowed.toInt) ~
-          ("found" -> numFound) ~
+          ("found" -> solrDocumentList.getNumFound) ~
           ("returned" -> fileItems.size)
         )) ~
         ("fileitems" -> fileItems)
@@ -98,7 +97,7 @@ trait Solr extends DebugEnhancedLogging {
     (for {
       response <- Try(solrClient.query(query))
       _ <- checkResponseStatus(response)
-    } yield toJson(response.getResults, query)
+    } yield toJson(response.getResults, query) // .getFacet.Xxx, .getGroupXxx .getSortedXxx .getMoreLikeXxx etc.
       ).recoverWith {
       case t: HttpSolrClient.RemoteSolrException if isParseException(t) =>
         Failure(SolrBadRequestException(t.getMessage, t))
@@ -165,7 +164,7 @@ object Solr {
       fieldValueMap
         .keySet()
         .asScala
-        .map(key => JField(key, fieldValueMap.get(key).toString))
+        .map(key => JField(key.replace("easy_", ""), fieldValueMap.get(key).toString))
         .toList
     }
   }

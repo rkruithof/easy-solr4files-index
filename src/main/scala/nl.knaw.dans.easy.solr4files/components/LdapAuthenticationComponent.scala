@@ -15,9 +15,7 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
-import java.security.MessageDigest
 import java.util
-import java.util.Base64
 import javax.naming.directory.{ SearchControls, SearchResult }
 import javax.naming.ldap.{ InitialLdapContext, LdapContext }
 import javax.naming.{ AuthenticationException, Context, NamingEnumeration }
@@ -37,12 +35,14 @@ trait LdapAuthenticationComponent extends AuthenticationComponent {
     def getUser(userName: String, password: String): Try[User] = {
 
       logger.info(s"looking for user [$userName]")
+
       def toUser(searchResult: SearchResult) = {
         def getAttrs(key: String) = {
           Option(searchResult.getAttributes.get(key)).map(
             _.getAll.asScala.toList.map(_.toString)
           ).getOrElse(Seq.empty)
         }
+
         val roles = getAttrs("easyRoles")
         User(userName,
           isArchivist = roles.contains("ARCHIVIST"),

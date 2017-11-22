@@ -25,7 +25,6 @@ import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.configuration.PropertiesConfiguration
 
-import scala.collection.JavaConverters._
 import scala.util.{ Failure, Try }
 import scala.xml.Elem
 

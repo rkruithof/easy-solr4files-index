@@ -31,7 +31,7 @@ trait AuthenticationComponent extends DebugEnhancedLogging {
       (authRequest.providesAuth, authRequest.isBasicAuth) match {
         case (true, true) => getUser(authRequest.username, authRequest.password).map(Some(_))
         case (true, _) => Failure(AuthorisationTypeNotSupportedException(new Exception("Supporting only basic authentication")))
-        case (_,_) => Success(None)
+        case (_, _) => Success(None)
       }
     }
 

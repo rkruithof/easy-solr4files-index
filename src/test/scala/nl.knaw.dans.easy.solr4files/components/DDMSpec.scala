@@ -15,8 +15,6 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
-import java.util.UUID
-
 import nl.knaw.dans.easy.solr4files.{ TestSupportFixture, _ }
 
 class DDMSpec extends TestSupportFixture {

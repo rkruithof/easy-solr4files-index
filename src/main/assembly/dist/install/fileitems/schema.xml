@@ -184,6 +184,9 @@
     <field name="easy_file_path" type="string" indexed="true" stored="true" required="true"/>
     <field name="easy_file_accessible_to" type="string" indexed="true" stored="true" required="true"/>
     <field name="easy_file_mime_type" type="string" indexed="true" stored="true" required="true"/>
+
+    <field name="easy_dataset_date_available" type="date" indexed="true" stored="true" required="true" multiValued="false"/>
+
     <!-- size should be a number, long so we can search for smaller or larger -->
     <field name="easy_file_size" type="string" indexed="true" stored="true"/>
     <field name="easy_file_checksum" type="string" indexed="true" stored="true"/>
@@ -194,7 +197,6 @@
     <!-- note that audience is a 'code', the readable labels are placed in easy_dataset_subject -->
     <field name="easy_dataset_audience" type="string" indexed="true" stored="true" required="true" multiValued="true"/>
     <!-- not required -->
-    <field name="easy_dataset_date_available" type="date" indexed="true" stored="true" multiValued="false"/>
     <field name="easy_file_title" type="text_general" indexed="true" stored="true"/>
     <field name="easy_dataset_relation" type="text_general" indexed="true" stored="true" multiValued="true"/>
     <field name="easy_dataset_identifier" type="text_general" indexed="true" stored="true" multiValued="true"/>

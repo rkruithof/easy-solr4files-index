@@ -17,11 +17,13 @@ package nl.knaw.dans.easy.solr4files
 
 import java.net.URLDecoder
 
+import nl.knaw.dans.easy.solr4files.SearchServlet.userFilters
 import nl.knaw.dans.easy.solr4files.components.User
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.http.HttpStatus._
 import org.apache.solr.client.solrj.SolrQuery
+import org.apache.solr.client.solrj.util.ClientUtils.escapeQueryChars
 import org.scalatra._
 import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 
@@ -43,62 +45,114 @@ class SearchServlet(app: EasyUpdateSolr4filesIndexApp) extends ScalatraServlet w
       }
   }
 
-  // injection: https://packetstormsecurity.com/files/144678/apachesolr701-xxe.txt
-  // https://lucene.apache.org/solr/guide/6_6/query-syntax-and-parsing.html
-  // lucene seems not safe: Support for using any type of query parser as a nested clause
-  // edismax: supports the full Lucene query parser syntax, so possibly not safe too
-  // dismax: more like [...] Google [...] makes [...] appropriate [...] for many consumer applications
-  private val queryParser = "dismax"
-
   get("/") {
+    contentType = "application/json"
+
     // no command line equivalent, use http://localhost:8983/solr/#/fileitems/query
     // or for example:           curl 'http://localhost:8983/solr/fileitems/query?q=*'
-    (params.get("text"), app.authenticate(new BasicAuthRequest(request))) match {
-      case (None, _) => BadRequest("filesearch requires param 'text' (a solr dismax query), got " + params.asString)
-      case (Some(q), Success(user)) => respond(app.search(createQuery(q, user)))
-      case (Some(_), Failure(InvalidUserPasswordException(_, _))) => Unauthorized()
-      case (Some(_), Failure(AuthorisationNotAvailableException(_))) => ServiceUnavailable("Authentication service not available, try anonymous search")
-      case (Some(_), Failure(AuthorisationTypeNotSupportedException(_))) => ServiceUnavailable("Only anonymous search or basic authentication supported")
-      case (Some(_), Failure(t)) =>
+    app.authenticate(new BasicAuthRequest(request)) match {
+      case (Success(user)) => respond(app.search(createQuery(user)))
+      case (Failure(InvalidUserPasswordException(_, _))) => Unauthorized()
+      case (Failure(AuthorisationNotAvailableException(_))) => ServiceUnavailable("Authentication service not available, try anonymous search")
+      case (Failure(AuthorisationTypeNotSupportedException(_))) => BadRequest("Only anonymous search or basic authentication supported")
+      case (Failure(t)) =>
         logger.error(t.getMessage, t)
         InternalServerError()
     }
   }
 
-  private def createQuery(query: String, user: Option[User]) = {
+  private def createQuery(user: Option[User]) = {
     // invalid optional values are replaced by the default value
     val rows = params.get("limit").withFilter(_.matches("[1-9][0-9]*")).map(_.toInt).getOrElse(10)
     val start = params.get("skip").withFilter(_.matches("[0-9]+")).map(_.toInt).getOrElse(0)
-    val toAnonymous = "easy_file_accessible_to:ANONYMOUS"
-    val toKnown = "easy_file_accessible_to:KNOWN"
-    val available = "easy_dataset_date_available:[* TO NOW]"
     new SolrQuery() {
-      setQuery(query)
-      user match {
-        case Some(User(_, _, true, _)) => // archivist: no filters
-        case Some(User(_, _, _, true)) => // admin: no filters
-        // TODO filterQuery for groups
-        case None =>
-          addFilterQuery(s"$toAnonymous OR $toKnown")
-          addFilterQuery(available)
-        case Some(User(id, _, _, _)) =>
-          // TODO reuse cache of partial filters
-          val own = "easy_dataset_depositor_id:" + id
-          addFilterQuery(s"$toAnonymous OR $toKnown OR $own")
-          addFilterQuery(s"$available OR $own")
-        // TODO add message to header (you can see ... because you are the owner) like in the webui?
+      params.get("text") match {
+        case None => setQuery("*:*")
+        case Some(t) => setQuery(t)
+          // injection: https://packetstormsecurity.com/files/144678/apachesolr701-xxe.txt
+          // https://lucene.apache.org/solr/guide/6_6/query-syntax-and-parsing.html
+          // lucene seems not safe: Support for using any type of query parser as a nested clause
+          // edismax: supports the full Lucene query parser syntax, so possibly not safe too
+          // dismax: more like [...] Google [...] makes [...] appropriate [...] for many consumer applications
+          set("defType", "dismax")
       }
-      setFields("easy_dataset_*", "easy_file_*") // TODO user configurable like rows and start
+      accessibilityFilters(user)
+        .foreach(q => addFilterQuery(q))
+      userSpecifiedFilters()
+        .withFilter(_.isDefined)
+        .foreach(fqOpt => addFilterQuery(fqOpt.get))
+      setFields("easy_dataset_*", "easy_file_*") // TODO user configurable like rows and start?
       setStart(start)
       setRows(rows) // todo max from application.properties
       setTimeAllowed(5000) // 5 seconds TODO configurable in application.properties
-      // setFacet... setMoreLikeThis... setHighlight... setDebug... etc
+      // setFacet... setMoreLike... setHighlight... setDebug... etc
 
-      set("defType", queryParser)
-      // TODO downgrade to debug logging?
       logger.info(s"$user requested: " + params.asString)
       logger.info("request passed on as: " + toString)
       logger.info("decoded: " + URLDecoder.decode(toString, "UTF8"))
     }
   }
+
+  private def accessibilityFilters(user: Option[User]): Seq[String] = {
+    val toAnonymous = "easy_file_accessible_to:ANONYMOUS"
+    val toKnown = "easy_file_accessible_to:KNOWN"
+    val available = "easy_dataset_date_available:[* TO NOW]"
+    user match {
+      case Some(User(_, _, true, _)) => // archivist: no filters
+        Seq.empty
+      case Some(User(_, _, _, true)) => // admin: no filters
+        Seq.empty
+      case None =>
+        Seq(
+          s"$toAnonymous OR $toKnown",
+          available
+        )
+      case Some(User(id, _, _, _)) =>
+        // TODO reuse cache of partial filters
+        val own = "easy_dataset_depositor_id:" + id
+        Seq(
+          s"$toAnonymous OR $toKnown OR $own",
+          s"$available OR $own"
+        )
+      // TODO add message to header (you can see ... because you are the owner) like in the webui?
+    }
+  }
+
+  private def userSpecifiedFilters(): Seq[Option[String]] = {
+
+    userFilters.map(key =>
+      multiParams
+        .get(key)
+        .map(createClauseChain(key, _))
+    )
+  }
+
+  private def createClauseChain(key: String, values: Seq[String]) = {
+    values
+      .map(createClause(key, _))
+      .mkString(" OR ")
+  }
+
+  private def createClause(key: String, value: String) = {
+    s"easy_$key:${ escapeQueryChars(value) }"
+  }
+}
+
+object SearchServlet {
+
+  // TODO keep in sync with literals returned by DDM, Bag and FileItem classes
+  val userFilters = Seq(
+    "dataset_id",
+    "dataset_doi",
+    "dataset_depositor_id",
+    "file_mime_type",
+    "file_size",
+    "file_checksum",
+    "dataset_title",
+    "dataset_creator",
+    "dataset_audience",
+    "dataset_relation",
+    "dataset_subject",
+    "dataset_coverage"
+  )
 }

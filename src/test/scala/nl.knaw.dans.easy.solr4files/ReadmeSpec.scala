@@ -19,6 +19,8 @@ import java.io.{ ByteArrayOutputStream, File }
 
 import org.scalatest._
 
+import scala.io.Source
+
 class ReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
   System.setProperty("app.home", "src/main/assembly/dist") // Use the default settings in this test
 
@@ -49,5 +51,12 @@ class ReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
   "description line(s) in help info" should "be part of README.md and pom.xml" in {
     new File("README.md") should containTrimmed(clo.description)
     new File("pom.xml") should containTrimmed(clo.description)
+  }
+
+  "user filters" should "be listed in README.md" in {
+    val readme = Source.fromFile(new File("README.md")).mkString
+    SearchServlet.userFilters.foreach(
+      s => readme should include(s"`$s`")
+    )
   }
 }

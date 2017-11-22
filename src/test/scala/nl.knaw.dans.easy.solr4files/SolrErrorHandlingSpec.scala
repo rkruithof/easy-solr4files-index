@@ -74,6 +74,7 @@ class SolrErrorHandlingSpec extends TestSupportFixture
   }
 
   "submit" should "return the exception bubbling up from solrClient.request" in {
+    assume(canConnectToEasySchemas)
     initVault()
     post(s"/fileindex/update/pdbs/${ uuidCentaur }") {
       body shouldBe s"solr update of file ${ uuidCentaur }/data/path/to/a/random/video/hubble.mpg failed with mocked add"

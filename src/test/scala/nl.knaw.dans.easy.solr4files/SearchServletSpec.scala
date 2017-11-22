@@ -24,6 +24,8 @@ import org.apache.solr.common.{ SolrDocument, SolrDocumentList }
 import org.scalamock.scalatest.MockFactory
 import org.scalatra.test.scalatest.ScalatraSuite
 
+import scalaj.http.Base64
+
 class SearchServletSpec extends TestSupportFixture
   with ServletFixture
   with ScalatraSuite
@@ -34,27 +36,31 @@ class SearchServletSpec extends TestSupportFixture
     override lazy val solrClient: SolrClient = new SolrClient() {
       // can't use mock because SolrClient has a final method
 
-      override def query(params: SolrParams): QueryResponse = mockQueryResponse
+      override def query(params: SolrParams): QueryResponse = mockQueryResponse(params)
 
       override def close(): Unit = ()
 
       override def request(solrRequest: SolrRequest[_ <: SolrResponse], s: String): NamedList[AnyRef] =
-        throw new Exception("mocked request")
+        throw new Exception("not expected call")
     }
 
-    private def mockQueryResponse = {
-
+    private def mockQueryResponse(params: SolrParams) = {
       new QueryResponse {
         override def getResults: SolrDocumentList = new SolrDocumentList {
-          setNumFound(2)
+          setNumFound(3)
           setStart(0)
+          add(new SolrDocument(new java.util.TreeMap[String, AnyRef] {
+            put("debug", s"$params")
+            // just for these tests: allows to verify what was sent to solr
+            // so far any other part of the response is static for all tests
+          }))
           add(new SolrDocument(new java.util.HashMap[String, AnyRef] {
-            put("name", "file.txt")
+            put("easy_file_name", "file.txt")
           }))
           add(new SolrDocument(new java.util.TreeMap[String, AnyRef] {
             // a sorted order makes testing easier
-            put("name", "some.png")
-            put("size", "123")
+            put("easy_file_name", "some.png")
+            put("easy_file_size", "123")
           }))
         }
       }
@@ -64,64 +70,105 @@ class SearchServletSpec extends TestSupportFixture
   private val app = new EasyUpdateSolr4filesIndexApp(new StubbedWiring)
   addServlet(new SearchServlet(app), "/*")
 
-  "get /" should "complain about missing argument" in {
-    get("/?q=something") {
-      body shouldBe "filesearch requires param 'text' (a solr dismax query), got params [q -> something]"
-      status shouldBe SC_BAD_REQUEST
+  "get /" should "translate to searching with *:* and the default parser" in {
+    get("/?q=foo+bar") { // q is ignored as it is an unknown argument
+      body should include(""""debug":"q=*:*&fq=easy_file_accessible_to:ANONYMOUS+OR+easy_file_accessible_to:KNOWN&fq=easy_dataset_date_available:[*+TO+NOW]&fl=easy_dataset_*,easy_file_*&start=0&rows=10&timeAllowed=5000"""")
+      status shouldBe SC_OK
     }
   }
 
   it should "return json" in {
-    get(s"/?text=nothing") {
+    get(s"/?text=something") {
+      header.get("Content-Type") shouldBe Some("application/json;charset=UTF-8")
       body should startWith(
         """{
-          |  "header":{
-          |    "text":"nothing",
+          |  "summary":{
+          |    "text":"something",
           |    "skip":0,
           |    "limit":10,
           |    "time_allowed":5000,
-          |    "found":2,
-          |    "returned":2
+          |    "found":3,
+          |    "returned":3
           |  },
-          |  "fileitems":[{""".stripMargin)
+          |  "fileitems":[{
+          |    "debug":"q=something&defType=dismax&fq=easy_file_accessible_to:ANONYMOUS+OR+easy_file_accessible_to:KNOWN&fq=easy_dataset_date_available:[*+TO+NOW]&fl=easy_dataset_*,easy_file_*&start=0&rows=10&timeAllowed=5000"
+          |  },{
+          |""".stripMargin)
       body should include(
         """{
-          |    "name":"file.txt"
+          |    "file_name":"file.txt"
           |  }""".stripMargin)
       body should include(
         """{
-          |    "name":"some.png",
-          |    "size":"123"
+          |    "file_name":"some.png",
+          |    "file_size":"123"
           |  }""".stripMargin)
       body should endWith(
-        """"
+        """
           |  }]
           |}""".stripMargin)
       status shouldBe SC_OK
     }
   }
 
-  it should "return a single file" ignore {
-    // TODO when fixed add arguments to readme
-    get(s"/?text=nothing&limit=1") {
-      body should startWith(
-        """{
-          |  "header":{
-          |    "text":"nothing",
-          |    "skip":0,
-          |    "limit":1,
-          |    "time_allowed":5000,
-          |    "found":2,
-          |    "retuned":1
-          |  },
-          |  "fileitems":[{""".stripMargin)
-      body should endWith(
-        """"
-          |  }]
-          |}""".stripMargin)
+  it should "translate limit to rows" in {
+    get(s"/?text=foo+bar&limit=1") {
+      body should include("&start=0&rows=1&timeAllowed=5000")
       status shouldBe SC_OK
     }
   }
 
-  // TODO test authentication, see https://github.com/DANS-KNAW/easy-update-solr4files-index/pull/9#discussion_r150809734
+  it should "translate skip to start" in {
+    get(s"/?text=foo+bar&skip=1") {
+      body should include("&start=1&rows=10&timeAllowed=5000")
+      status shouldBe SC_OK
+    }
+  }
+
+  it should "translate multivalued user specified filter" in {
+    get(s"/?text=foo+bar&file_mime_type=application/pdf&file_mime_type=text/plain") {
+      body should include("""&fq=easy_file_mime_type:application\\/pdf+OR+easy_file_mime_type:text\\/plain&""")
+      status shouldBe SC_OK
+    }
+  }
+
+  it should "translate encoded filter" in {
+    get(s"/?text=foo+bar&file_mime_type=application%2Fpdf") {
+      body should include("""&fq=easy_file_mime_type:application\\/pdf&""")
+      status shouldBe SC_OK
+    }
+  }
+
+  it should "escape user specified values to prevent potential injection: {!xmlparser..." in {
+    get(s"/?text=nothing&file_mime_type=%7B!xmlparser") {
+      body should include("""&fq=easy_file_mime_type:\\{\\!xmlparser&""")
+      status shouldBe SC_OK
+    }
+  }
+
+  it should "reject non-basic authentication" in {
+    get(s"/?text=nothing", headers = Map("Authorization" ->
+      """Digest realm="testrealm@host.com",
+        |qop="auth,auth-int",
+        |nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
+        |opaque="5ccc069c403ebaf9f0171e9517f40e41"""".stripMargin)) {
+      body shouldBe "Only anonymous search or basic authentication supported"
+      status shouldBe SC_BAD_REQUEST
+    }
+  }
+
+  it should "report no authentication available" in {
+    get(s"/?text=nothing", headers = Map("Authorization" -> ("Basic " + Base64.encodeString("somebody:secret")))) {
+      status shouldBe SC_SERVICE_UNAVAILABLE
+      body shouldBe "Authentication service not available, try anonymous search"
+    }
+  }
+
+  it should "apply authenticated filters" ignore { // TODO mock Authentication component alias LDAP
+    get(s"/?text=nothing", headers = Map("Authorization" -> ("Basic " + Base64.encodeString("somebody:secret")))) {
+      body should include("to:KNOWN+OR+easy_dataset_depositor_id:somebody")
+      body should include("TO+NOW]+OR+easy_dataset_depositor_id:somebody")
+      status shouldBe SC_OK
+    }
+  }
 }

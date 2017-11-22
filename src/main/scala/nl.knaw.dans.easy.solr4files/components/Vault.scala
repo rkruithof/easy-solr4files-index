@@ -39,7 +39,7 @@ trait Vault extends DebugEnhancedLogging {
   }
 
   def getBagIds(storeName: String): Try[Seq[UUID]] = for {
-  // no state param (in fact no param at all) so we just get the active bags
+    // no state param (in fact no param at all) so we just get the active bags
     storeURI <- Try(vaultBaseUri.resolve(s"stores/$storeName/bags"))
     lines <- storeURI.toURL.readLines
   } yield lines

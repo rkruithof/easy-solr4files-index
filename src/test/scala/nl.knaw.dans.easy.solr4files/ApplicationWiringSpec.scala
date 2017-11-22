@@ -17,7 +17,6 @@ package nl.knaw.dans.easy.solr4files
 
 import java.util.UUID
 
-import nl.knaw.dans.easy.solr4files.components.{ Bag, FileItem }
 import org.apache.commons.io.FileUtils.write
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest
 import org.apache.solr.client.solrj.response.UpdateResponse

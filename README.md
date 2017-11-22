@@ -21,8 +21,9 @@ SYNOPSIS
     easy-update-solr4files-index init <bag-store>
     easy-update-solr4files-index run-service
     easy-update-solr4files-index delete <solr-query>
+    easy-update-solr4files-index run-service
     
-    Some examples of [standard] solr queries for the delete command:
+    Some examples of standard solr queries for the delete command:
     
       everything:            '*:*'
       all bags of one store: 'easy_dataset_store_id:pdbs'
@@ -36,22 +37,33 @@ When started with the sub-command `run-service` a REST API becomes available sum
 "Method" refers to the HTTP method used in the request. "Path" is the path pattern used. 
 Placeholders for variables start with a colon, optional parts are enclosed in square brackets.
 
-Method   | Path                             | Args  |Action
----------|----------------------------------|-------|------------------------------------
-`GET`    | `/fileindex`                     |       | Return a simple message to indicate that the service is up: "EASY File index is running."
-`POST`   | `/fileindex/init[/:store]`       |       | Index all bag stores or just one. Eventual obsolete items are cleared.
-`POST`   | `/fileindex/update/:store/:uuid` |       | Index all files of one bag. Eventual obsolete file items are cleared.
-`DELETE` | `/fileindex/:store[/:uuid]`      |       | Remove all items or the items of a store or bag.
-`DELETE` | `/fileindex/`                    | q     | Remove the items matching the mandatory [standard] solr query.
-`GET`    | `/filesearch`                    |       | Return indexed metadata. Not known arguments are ignored. Defaults are used for optional arguments with invalid values.
-         |                                  | text  | Mandatory, a [dismax] query.
-         |                                  | skip  | Optional, default 0 (zero), the number of rows of the query result to skip in the response.
-         |                                  | limit | Optional, default 10, the maximum number of rows to return in the response.
+Method   | Path                             | Action
+---------|----------------------------------|------------------------------------
+`GET`    | `/fileindex`                     | Return a simple message to indicate that the service is up: "EASY File index is running."
+`POST`   | `/fileindex/init[/:store]`       | Index all bag stores or just one. Eventual obsolete items are cleared.
+`POST`   | `/fileindex/update/:store/:uuid` | Index all files of one bag. Eventual obsolete file items are cleared.
+`DELETE` | `/fileindex/:store[/:uuid]`      | Remove all items from the index or the items of a store or bag.
+`DELETE` | `/fileindex/`                    | Requires parameter q, a mandatory [standard] solr query that specifies the items to remove from the index.
+`GET`    | `/filesearch`                    | Return indexed metadata. Query parameters are optional, not known parameters are ignored.
 
-The following example would delete a bag from the index
 
-    curl -X DELETE 'http://easy.dans.knaw.nl/fileindex/?q=easy_dataset_id:ef425828-e4ae-4d58-bf6a-c89cd46df61c'
-    
+Parameters for `filesearch` | Description
+----------------------------|----------------
+`text`                      | The query for the textual content. Becomes the `q` parameter of a [dismax] query. If not specified all accessible items are returned unless a restriction is specified.
+`skip`                      | For result paging, default 0.
+`limit`                     | For result paging, default 10.
+`dataset_id`, `dataset_doi` | Restrict to one or some datasets. Repeating just one type of the identifiers returns items for each value. Mixing identifier types only returns items matching at least one of the values for each type.
+`dataset_depositor_id`      | Restrict to the specific dataset field. Repeating a field returns items with at least one of the values. Specifying multiple fields only returns items matching at least one of the values for each field.
+`file_mime_type`            | ,,
+`file_size`                 | ,,
+`file_checksum`             | ,,
+`dataset_title`             | ,,
+`dataset_creator`           | ,,
+`dataset_audience`          | ,,
+`dataset_relation`          | ,,
+`dataset_subject`           | ,,
+`dataset_coverage`          | ,,
+
 [dismax]: https://lucene.apache.org/solr/guide/6_6/the-dismax-query-parser.html#the-dismax-query-parser
 [standard]: https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html
 
@@ -105,7 +117,20 @@ ARGUMENTS
 EXAMPLES
 --------
 
-    easy-update-solr4files-index update 9da0541a-d2c8-432e-8129-979a9830b427
+Using the command line to update a single bag in the store `pdbs` respective (re)index all bags in all stores.
+
+    easy-update-solr4files-index -s pdbs update 9da0541a-d2c8-432e-8129-979a9830b427
+    easy-update-solr4files-index init
+
+Using the rest interface to delete a bag from the index respective (re)index all bags in one store.
+
+    curl -X DELETE 'http://test.dans.knaw.nl:20150/fileindex/?q=easy_dataset_id:ef425828-e4ae-4d58-bf6a-c89cd46df61c'
+    curl -X POST 'http://test.dans.knaw.nl:20150/fileindex/init/pdbs'
+
+Retrieve the second page of PDF and text files containing one of the words `foo` or `bar`.
+See the [security advice](#security-advice) for the URL part preceding the `?`.
+
+    curl 'http://test.dans.knaw.nl:20150/filesearch?text=foo+bar&file_mime_type=application/pdf&file_mime_type=text&skip=10&limit=10'
 
 
 INSTALLATION AND CONFIGURATION
