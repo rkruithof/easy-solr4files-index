@@ -55,7 +55,7 @@ trait Solr extends DebugEnhancedLogging {
       submitWithContent(fileUrl, solrDocId, solrFields)
         .map(_ => FileSubmittedWithContent(solrDocId))
         .recoverWith { case t =>
-          logger.warn(s"Submission with content of $solrDocId failed with ${ t.getMessage }", t)
+          logger.warn(s"Submission with content of [$solrDocId] failed with ${ t.getMessage }")
           resubmitMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithJustMetadata(solrDocId))
         }
     }

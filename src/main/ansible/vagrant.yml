@@ -55,41 +55,11 @@
       mode: "0775"
     with_items: "{{ bag_stores }}"
 
-  - name: Check whether the bags exist
-    stat:
-      path: "{{ stores_dir }}/pdbs/ab"
-    register: bag_dir_stat
-
-  - name: Copy space-travel bag to server
-    copy: # bag-store knows it with uuid 40594b6d-8378-4260-b96b-13b57beadf7c
-      src: "../../test/resources/vault/stores/pdbs/bags/9da0541a-d2c8-432e-8129-979a9830b427"
-      dest: "{{ stores_dir }}/pdbs/ab/123456789012345678901234567890"
-      mode: "0775"
-      directory_mode: "0775"
-    when: "bag_dir_stat.stat.exists == False"
-
-  - name: Copy test-bag to server
-    copy: # bag-store knows it with uuid ab123456-7890-1234-5678-901234567890
-      src: "../../test/resources/vault/stores/pdbs/bags/1afcc4e9-2130-46cc-8faf-2663e199b218"
-      dest: "{{ stores_dir }}/pdbs/40/594b6d83784260b96b13b57beadf7c"
-      mode: "0775"
-      directory_mode: "0775"
-    when: "bag_dir_stat.stat.exists == False"
-
-  - name: Find hidden files in or between test bags
-    find:
-      paths: "{{ stores_dir }}"
-      patterns: ".DS_Store"
-      hidden: "yes"
-      recurse: "yes"
-    register: hidden_files
-
-  - name: Remove hidden files from test bags
+  - name: Create link to test data
     file:
-      path: "{{ item.path }}"
-      state: "absent"
-    with_items: "{{ hidden_files.files }}"
-
+      src: /vagrant/src/test/resources/vault/stores/pdbs/bags
+      dest: /home/vagrant/test-data
+      state: link
 
   - service:
       name: "easy-bag-store"

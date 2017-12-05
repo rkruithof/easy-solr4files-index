@@ -74,9 +74,11 @@ class ApplicationWiring(configuration: Configuration)
       ddmXML <- bag.loadDDM
       ddm = new DDM(ddmXML)
       filesXML <- bag.loadFilesXML
+      _ = logger.info(s"deleted documents of $bagId")
       _ <- deleteDocuments(s"id:${ bag.bagId }*")
       feedbackMessage <- updateFiles(bag, ddm, filesXML)
       _ <- commit()
+      _ = logger.info(s"committed $feedbackMessage")
     } yield feedbackMessage
   }.recoverWith {
     case t: SolrStatusException => commitAnyway(t) // just the delete

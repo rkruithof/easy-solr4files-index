@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.easy.solr4files
 
+import java.nio.file.Paths
+
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import resource._
@@ -25,7 +27,7 @@ import scala.util.{ Failure, Try }
 
 object Command extends App with DebugEnhancedLogging {
 
-  val configuration = Configuration()
+  val configuration = Configuration(Paths.get(System.getProperty("app.home")))
   val commandLine: CommandLineOptions = new CommandLineOptions(args, configuration)
   val app = new EasyUpdateSolr4filesIndexApp(new ApplicationWiring(configuration))
 

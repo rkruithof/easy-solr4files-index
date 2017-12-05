@@ -40,8 +40,8 @@ Placeholders for variables start with a colon, optional parts are enclosed in sq
 Method   | Path                             | Action
 ---------|----------------------------------|------------------------------------
 `GET`    | `/fileindex`                     | Return a simple message to indicate that the service is up: "EASY File index is running."
-`POST`   | `/fileindex/init[/:store]`       | Index all bag stores or just one. Eventual obsolete items are cleared.
-`POST`   | `/fileindex/update/:store/:uuid` | Index all files of one bag. Eventual obsolete file items are cleared.
+`POST`   | `/fileindex/init[/:store]`       | Index all bag stores or just one. Possible obsolete items are cleared.
+`POST`   | `/fileindex/update/:store/:uuid` | Index all files of one bag. Possible obsolete file items are cleared.
 `DELETE` | `/fileindex/:store[/:uuid]`      | Remove all items from the index or the items of a store or bag.
 `DELETE` | `/fileindex/`                    | Requires parameter q, a mandatory [standard] solr query that specifies the items to remove from the index.
 `GET`    | `/filesearch`                    | Return indexed metadata. Query parameters are optional, not known parameters are ignored.

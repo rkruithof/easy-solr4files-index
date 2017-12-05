@@ -27,7 +27,7 @@ class FileItemSpec extends TestSupportFixture {
       <dcterms:type>http://schema.org/VideoObject</dcterms:type>
       <dcterms:format>video/mpeg</dcterms:format>
       <dcterms:title>video about the centaur meteorite</dcterms:title>
-      <dcterms:accessRights>RESTRICTED_GROUP</dcterms:accessRights>
+      <accessibleToRights>RESTRICTED_GROUP</accessibleToRights>
       <dcterms:relation xml:lang="en">data/reisverslag/centaur.srt</dcterms:relation>
       <dcterms:relation xml:lang="nl">data/reisverslag/centaur-nederlands.srt</dcterms:relation>
     </file>

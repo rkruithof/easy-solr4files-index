@@ -104,7 +104,7 @@ class SearchServlet(app: EasyUpdateSolr4filesIndexApp) extends ScalatraServlet w
         Seq.empty
       case None =>
         Seq(
-          s"$toAnonymous OR $toKnown",
+          s"$toAnonymous",
           available
         )
       case Some(User(id, _, _, _)) =>

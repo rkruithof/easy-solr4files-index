@@ -72,7 +72,7 @@ class SearchServletSpec extends TestSupportFixture
 
   "get /" should "translate to searching with *:* and the default parser" in {
     get("/?q=foo+bar") { // q is ignored as it is an unknown argument
-      body should include(""""debug":"q=*:*&fq=easy_file_accessible_to:ANONYMOUS+OR+easy_file_accessible_to:KNOWN&fq=easy_dataset_date_available:[*+TO+NOW]&fl=easy_dataset_*,easy_file_*&start=0&rows=10&timeAllowed=5000"""")
+      body.split("\n").find(_.startsWith("""    "debug""")) shouldBe Option("""    "debug":"q=*:*&fq=easy_file_accessible_to:ANONYMOUS&fq=easy_dataset_date_available:[*+TO+NOW]&fl=easy_dataset_*,easy_file_*&start=0&rows=10&timeAllowed=5000"""")
       status shouldBe SC_OK
     }
   }
@@ -91,7 +91,7 @@ class SearchServletSpec extends TestSupportFixture
           |    "returned":3
           |  },
           |  "fileitems":[{
-          |    "debug":"q=something&defType=dismax&fq=easy_file_accessible_to:ANONYMOUS+OR+easy_file_accessible_to:KNOWN&fq=easy_dataset_date_available:[*+TO+NOW]&fl=easy_dataset_*,easy_file_*&start=0&rows=10&timeAllowed=5000"
+          |    "debug":"q=something&defType=dismax&fq=easy_file_accessible_to:ANONYMOUS&fq=easy_dataset_date_available:[*+TO+NOW]&fl=easy_dataset_*,easy_file_*&start=0&rows=10&timeAllowed=5000"
           |  },{
           |""".stripMargin)
       body should include(

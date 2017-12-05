@@ -36,7 +36,8 @@ case class FileItem(bag: Bag, ddm: DDM, xml: Node) extends DebugEnhancedLogging 
   }
 
   val path: String = xml.attribute("filepath").map(_.text).getOrElse("")
-  val accessibleTo: String = ( xml \ "accessRights").map(_.text).mkString match {
+  val accessibleTo: String = ( xml \ "accessibleToRights").map(_.text).mkString.trim match {
+      // TODO use module easy-auth-info / if not found it looks for <dcterms:AccessRights>
     case "" => datasetAccessibleTo
     case s => s
   }
