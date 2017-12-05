@@ -26,8 +26,7 @@ case class Configuration(version: String, properties: PropertiesConfiguration)
 
 object Configuration {
 
-  def apply(path: Path): Configuration = {
-    val home = Paths.get(System.getProperty("app.home"))
+  def apply(home: Path): Configuration = {
     val cfgPath = Seq(
       Paths.get(s"/etc/opt/dans.knaw.nl/easy-update-solr4files-index/"),
       home.resolve("cfg"))
