@@ -141,7 +141,7 @@ class ApplicationWiring(configuration: Configuration)
       .map(FileItem(bag, ddm, _))
       .filter(_.shouldIndex)
       .toStream
-      .map(f => createDoc(f, getSize(f.bag.storeName, f.bag.bagId, f.path)))
+      .map(f => createDoc(f))
       .takeUntilFailure
       .doIfFailure { case MixedResultsException(results: Seq[_], _) => results.foreach(fb => logger.info(fb.toString)) }
       .map(results => BagSubmitted(bag.bagId.toString, results))
