@@ -74,7 +74,7 @@ class ApplicationWiringSpec extends TestSupportFixture {
     assume(canConnectToEasySchemas)
     val result = new MockedAndStubbedWiring().update(store, uuidCentaur)
     inside(result) { case Success(feedback) =>
-      feedback.toString shouldBe s"Bag ${ uuidCentaur }: 7 times FileSubmittedWithContent, 2 times FileSubmittedWithJustMetadata"
+      feedback.toString shouldBe s"Bag ${ uuidCentaur }: 7 times FileSubmittedWithContent, 2 times FileSubmittedWithOnlyMetadata"
     }
   }
 

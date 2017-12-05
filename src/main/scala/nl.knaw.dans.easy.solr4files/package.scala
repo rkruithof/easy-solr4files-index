@@ -100,7 +100,7 @@ package object solr4files extends DebugEnhancedLogging {
   abstract sealed class Feedback(val msg: String)
   abstract sealed class FileFeedback(override val msg: String) extends Feedback(msg)
   case class FileSubmittedWithContent(override val msg: String) extends FileFeedback(msg)
-  case class FileSubmittedWithJustMetadata(override val msg: String) extends FileFeedback(msg) {
+  case class FileSubmittedWithOnlyMetadata(override val msg: String) extends FileFeedback(msg) {
     logger.warn(s"Resubmitted $msg with just metadata")
   }
   case class StoreSubmitted(override val msg: String) extends Feedback(msg)

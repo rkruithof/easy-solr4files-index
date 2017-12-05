@@ -45,6 +45,9 @@ case class Bag(storeName: String,
     vault.fileURL(storeName, bagId, path)
   }
 
+  def fileSize(path: String): Long = {
+    vault.getSize(storeName, bagId, path)
+  }
 
   // splits a string on the first sequence of white space after the sha
   // the rest is a path that might contain white space
