@@ -42,22 +42,28 @@ trait Solr extends DebugEnhancedLogging {
   val solrUrl: URL
   lazy val solrClient: SolrClient = new HttpSolrClient.Builder(solrUrl.toString).build()
 
-  def createDoc(item: FileItem, size: Long): Try[FileFeedback] = {
+  def createDoc(item: FileItem): Try[FileFeedback] = {
     item.bag.fileUrl(item.path).flatMap { fileUrl =>
       val solrDocId = s"${ item.bag.bagId }/${ item.path }"
-      val solrFields = (item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals :+ "file_size" -> size.toString)
+      val solrFields = (item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals :+ "file_size" -> item.size.toString)
         .map { case (k, v) => (k, v.replaceAll("\\s+", " ").trim) }
         .filter { case (_, v) => v.nonEmpty }
       if (logger.underlying.isDebugEnabled) logger.debug(solrFields
         .map { case (key, value) => s"$key = $value" }
         .mkString("\n\t")
       )
-      submitWithContent(fileUrl, solrDocId, solrFields)
-        .map(_ => FileSubmittedWithContent(solrDocId))
-        .recoverWith { case t =>
-          logger.warn(s"Submission with content of [$solrDocId] failed with ${ t.getMessage }")
-          resubmitMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithJustMetadata(solrDocId))
-        }
+      if (!item.shouldSubmitWithContent) {
+        logger.info(s"Submission without content of [$solrDocId]")
+        submitWithOnlyMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
+      } else {
+        logger.info(s"Submission with content of [$solrDocId]")
+        submitWithContent(fileUrl, solrDocId, solrFields)
+          .map(_ => FileSubmittedWithContent(solrDocId))
+          .recoverWith { case t =>
+            logger.warn(s"Submission with content of [$solrDocId] failed with ${ t.getMessage }")
+            submitWithOnlyMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
+          }
+      }
     }
   }
 
@@ -128,7 +134,7 @@ trait Solr extends DebugEnhancedLogging {
     })).flatMap(checkSolrStatus)
   }
 
-  private def resubmitMetadata(solrDocId: String, solrFields: SolrLiterals) = {
+  private def submitWithOnlyMetadata(solrDocId: String, solrFields: SolrLiterals) = {
     Try(solrClient.add(new SolrInputDocument() {
       for ((k, v) <- solrFields) {
         addField(s"easy_$k", v)
@@ -138,7 +144,6 @@ trait Solr extends DebugEnhancedLogging {
       .flatMap(checkResponseStatus)
       .recoverWith { case t => Failure(SolrUpdateException(solrDocId, t)) }
   }
-
 
   private def checkResponseStatus[T <: SolrResponseBase](response: T): Try[T] = {
     // this method hides the inconsistent design of the solr library from the rest of the code

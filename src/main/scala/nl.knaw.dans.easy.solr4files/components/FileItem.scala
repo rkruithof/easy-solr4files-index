@@ -47,6 +47,15 @@ case class FileItem(bag: Bag, ddm: DDM, xml: Node) extends DebugEnhancedLogging 
     path.nonEmpty && accessible.contains(accessibleTo)
   }
 
+  lazy val size: Long = bag.fileSize(path)
+
+  val shouldSubmitWithContent: Boolean = {
+    // prevent content submission and extraction for large files, to keep it fast
+    // TODO make this value configurable
+    val maxFileSizeToExtractContentFrom = 64*1024*1024
+    size <= maxFileSizeToExtractContentFrom
+  }
+
   val mimeType: String = (xml \ "format").text
 
   // lazy postpones loading Bag.sha's
