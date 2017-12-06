@@ -26,4 +26,4 @@ cp -r 1afcc4e9-2130-46cc-8faf-2663e199b218 /data/bag-stores/pdbs/40/594b6d837842
 find /data/bag-stores/ -name '.*'
 ```
 
-Drop the hidden files (if any) and run `easy-update-solr4files-index init`
+Drop the hidden files (if any) and run `easy-solr4files-index init`

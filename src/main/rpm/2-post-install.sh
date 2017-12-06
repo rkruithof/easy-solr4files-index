@@ -18,7 +18,7 @@
 #include <service.sh>
 
 NUMBER_OF_INSTALLATIONS=$1
-MODULE_NAME=easy-update-solr4files-index
+MODULE_NAME=easy-solr4files-index
 INSTALL_DIR=/opt/dans.knaw.nl/$MODULE_NAME
 PHASE="POST-INSTALL"
 

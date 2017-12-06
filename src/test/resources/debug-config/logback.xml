@@ -10,9 +10,9 @@
 
 	<appender name="FILE"
 			  class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>data/easy-update-solr4files-index.log</file>
+		<file>data/easy-solr4files-index.log</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>data/easy-update-solr4files-index.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<fileNamePattern>data/easy-solr4files-index.%d{yyyy-MM-dd}.log</fileNamePattern>
 			<maxHistory>30</maxHistory>
 		</rollingPolicy>
 		<encoder>

@@ -18,7 +18,7 @@
 #include <service.sh>
 
 NUMBER_OF_INSTALLATIONS=$1
-MODULE_NAME=easy-update-solr4files-index
+MODULE_NAME=easy-solr4files-index
 PHASE="PRE-INSTALL"
 
 echo "$PHASE: START (Number of current installations: $NUMBER_OF_INSTALLATIONS)"

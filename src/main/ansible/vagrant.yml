@@ -144,10 +144,10 @@
   tasks:
     - name: Installing package
       yum:
-        name: dans.knaw.nl-easy-update-solr4files-index
+        name: dans.knaw.nl-easy-solr4files-index
         state: latest
 
     - service:
-        name: easy-update-solr4files-index
+        name: easy-solr4files-index
         state: started
         enabled: yes

@@ -1,6 +1,6 @@
-easy-update-solr4files-index
+easy-solr4files-index
 ============================
-[![Build Status](https://travis-ci.org/DANS-KNAW/easy-update-solr4files-index.png?branch=master)](https://travis-ci.org/DANS-KNAW/easy-update-solr4files-index)
+[![Build Status](https://travis-ci.org/DANS-KNAW/easy-solr4files-index.png?branch=master)](https://travis-ci.org/DANS-KNAW/easy-solr4files-index)
 
 * [SYNOPSIS](#synopsis)
   + [HTTP service](#http-service)
@@ -17,11 +17,10 @@ easy-update-solr4files-index
 SYNOPSIS
 --------
 
-    easy-update-solr4files-index update [-s <bag-store>] <uuid>
-    easy-update-solr4files-index init <bag-store>
-    easy-update-solr4files-index run-service
-    easy-update-solr4files-index delete <solr-query>
-    easy-update-solr4files-index run-service
+    easy-solr4files-index update [-s <bag-store>] <uuid>
+    easy-solr4files-index init <bag-store>
+    easy-solr4files-index delete <solr-query>
+    easy-solr4files-index run-service
     
     Some examples of standard solr queries for the delete command:
     
@@ -43,7 +42,7 @@ Method   | Path                             | Action
 `POST`   | `/fileindex/init[/:store]`       | Index all bag stores or just one. Possible obsolete items are cleared.
 `POST`   | `/fileindex/update/:store/:uuid` | Index all files of one bag. Possible obsolete file items are cleared.
 `DELETE` | `/fileindex/:store[/:uuid]`      | Remove all items from the index or the items of a store or bag.
-`DELETE` | `/fileindex/`                    | Requires parameter q, a mandatory [standard] solr query that specifies the items to remove from the index.
+`DELETE` | `/fileindex`                     | Requires parameter q, a mandatory [standard] solr query that specifies the items to remove from the index.
 `GET`    | `/filesearch`                    | Return indexed metadata. Query parameters are optional, not known parameters are ignored.
 
 
@@ -119,8 +118,8 @@ EXAMPLES
 
 Using the command line to update a single bag in the store `pdbs` respective (re)index all bags in all stores.
 
-    easy-update-solr4files-index -s pdbs update 9da0541a-d2c8-432e-8129-979a9830b427
-    easy-update-solr4files-index init
+    easy-solr4files-index -s pdbs update 9da0541a-d2c8-432e-8129-979a9830b427
+    easy-solr4files-index init
 
 Using the rest interface to delete a bag from the index respective (re)index all bags in one store.
 
@@ -151,11 +150,11 @@ INSTALLATION AND CONFIGURATION
 ### Steps
 
 1. Unzip the tarball to a directory of your choice, typically `/usr/local/`
-2. A new directory called easy-update-solr4files-index-<version> will be created
+2. A new directory called easy-solr4files-index-<version> will be created
 3. Add the command script to your `PATH` environment variable by creating a symbolic link to it from a directory that is
    on the path, e.g. 
    
-        ln -s /usr/local/easy-update-solr4files-index-<version>/bin/easy-update-solr4files-index /usr/bin
+        ln -s /usr/local/easy-solr4files-index-<version>/bin/easy-solr4files-index /usr/bin
 
 General configuration settings can be set in `cfg/application.properties` and logging can be configured
 in `cfg/logback.xml`. The available settings are explained in comments in aforementioned files.
@@ -179,6 +178,6 @@ Prerequisites:
 
 Steps:
 
-        git clone https://github.com/DANS-KNAW/easy-update-solr4files-index.git
-        cd easy-update-solr4files-index
+        git clone https://github.com/DANS-KNAW/easy-solr4files-index.git
+        cd easy-solr4files-index
         mvn install

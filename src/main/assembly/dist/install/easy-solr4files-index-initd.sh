@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-#  /etc/init.d/easy-update-solr4files-index
+#  /etc/init.d/easy-solr4files-index
 # chkconfig: 2345 92 58
 
 ### BEGIN INIT INFO
-# Provides:          easy-update-solr4files-index
+# Provides:          easy-solr4files-index
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
-# Short-Description: Starts the easy-update-solr4files-index service
+# Short-Description: Starts the easy-solr4files-index service
 # Description:       This file is used to start the daemon
 #                    and should be placed in /etc/init.d
 ### END INIT INFO
 
-NAME="easy-update-solr4files-index"
+NAME="easy-solr4files-index"
 EXEC="/usr/bin/jsvc"
 APPHOME="/opt/dans.knaw.nl/$NAME"
 JAVA_HOME="/usr/lib/jvm/jre"

@@ -18,7 +18,7 @@
 
 #include <service.sh>
 
-MODULE_NAME=easy-update-solr4files-index
+MODULE_NAME=easy-solr4files-index
 PHASE="POST-TRANS"
 
 echo "$PHASE: START"

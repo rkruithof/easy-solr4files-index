@@ -24,17 +24,17 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>nl.knaw.dans.easy</groupId>
-    <artifactId>easy-update-solr4files-index</artifactId>
+    <artifactId>easy-solr4files-index</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>EASY Update Solr4files Index</name>
-    <url>https://github.com/DANS-KNAW/easy-update-solr4files-index</url>
+    <url>https://github.com/DANS-KNAW/easy-solr4files-index</url>
     <description>Update the EASY SOLR for Files Index with file data from a bag-store</description>
     <inceptionYear>2017</inceptionYear>
     <properties>
         <main-class>nl.knaw.dans.easy.solr4files.Command</main-class>
     </properties>
     <scm>
-        <developerConnection>scm:git:https://github.com/DANS-KNAW/easy-update-solr4files-index</developerConnection>
+        <developerConnection>scm:git:https://github.com/DANS-KNAW/easy-solr4files-index</developerConnection>
         <tag>HEAD</tag>
     </scm>
     <dependencies>
