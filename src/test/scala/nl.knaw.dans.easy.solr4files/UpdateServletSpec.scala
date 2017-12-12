@@ -69,7 +69,7 @@ class UpdateServletSpec extends TestSupportFixture
 
   it should "return NOT FOUND for an empty path" in {
     post("/init/") {
-      body should startWith("""Requesting "POST /init/" on servlet "" but only have:""")
+      body should startWith("""Requesting "POST \/init\/" on servlet "" but only have:""")
       status shouldBe SC_NOT_FOUND
     }
   }
@@ -85,7 +85,7 @@ class UpdateServletSpec extends TestSupportFixture
 
   it should "return NOT FOUND if uuid is missing" in {
     post("/update/pdbs/") {
-      body should startWith("""Requesting "POST /update/pdbs/" on servlet "" but only have:""")
+      body should startWith("""Requesting "POST \/update\/pdbs\/" on servlet "" but only have:""")
       status shouldBe SC_NOT_FOUND
     }
   }
@@ -183,7 +183,7 @@ class UpdateServletSpec extends TestSupportFixture
   }
 
   private def createHttpException(code: Int) = {
-    val headers = Map[String, String]("Status" -> "")
+    val headers = Map("Status" -> IndexedSeq(""))
     val r = new HttpResponse[String]("", code, headers)
     // URL could be a vocabulary for the DDM class or addressing the bag store service
     HttpStatusException("getContent(url)", r)
