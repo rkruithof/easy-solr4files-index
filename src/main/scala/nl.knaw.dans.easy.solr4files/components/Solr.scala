@@ -169,6 +169,7 @@ object Solr {
       fieldValueMap
         .keySet()
         .asScala
+        .filter(_ != "easy_dataset_depositor_id")
         .map(key => JField(key.replace("easy_", ""), fieldValueMap.get(key).toString))
         .toList
     }
