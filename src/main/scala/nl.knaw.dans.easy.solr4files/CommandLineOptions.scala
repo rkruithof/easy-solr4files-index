@@ -27,7 +27,7 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
   printedName = "easy-solr4files-index"
   version(configuration.version)
   private val SUBCOMMAND_SEPARATOR = "---\n"
-  val description: String = s"""Update the EASY SOLR for Files Index with file data from a bag-store"""
+  val description: String = s"""EASY SOLR for Files Index with file data from a bag-store"""
   val synopsis: String =
     s"""
        |  $printedName update [-s <bag-store>] <uuid>
@@ -85,7 +85,7 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
   }
   val runService = new Subcommand("run-service") {
     descr(
-      "Starts EASY Update Solr4files Index as a daemon that services HTTP requests")
+      "Starts EASY Solr4files Index as a daemon that services HTTP requests")
     footer(SUBCOMMAND_SEPARATOR)
   }
   addSubcommand(update)

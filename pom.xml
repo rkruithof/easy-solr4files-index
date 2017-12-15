@@ -26,9 +26,9 @@
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-solr4files-index</artifactId>
     <version>1.0.1-SNAPSHOT</version>
-    <name>EASY Update Solr4files Index</name>
+    <name>EASY Solr4files Index</name>
     <url>https://github.com/DANS-KNAW/easy-solr4files-index</url>
-    <description>Update the EASY SOLR for Files Index with file data from a bag-store</description>
+    <description>EASY SOLR for Files Index with file data from a bag-store</description>
     <inceptionYear>2017</inceptionYear>
     <properties>
         <main-class>nl.knaw.dans.easy.solr4files.Command</main-class>

@@ -109,7 +109,7 @@ ARGUMENTS
       bag-store (not required)
     ---
     
-    Subcommand: run-service - Starts EASY Update Solr4files Index as a daemon that services HTTP requests
+    Subcommand: run-service - Starts EASY Solr4files Index as a daemon that services HTTP requests
           --help   Show help message
     ---
 
