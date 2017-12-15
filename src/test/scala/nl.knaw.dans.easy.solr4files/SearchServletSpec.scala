@@ -67,7 +67,7 @@ class SearchServletSpec extends TestSupportFixture
     }
   }
 
-  private val app = new EasyUpdateSolr4filesIndexApp(new StubbedWiring)
+  private val app = new EasySolr4filesIndexApp(new StubbedWiring)
   addServlet(new SearchServlet(app), "/*")
 
   "get /" should "translate to searching with *:* and the default parser" in {

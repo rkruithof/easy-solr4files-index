@@ -36,7 +36,7 @@ class UpdateServletSpec extends TestSupportFixture
       addProperty("solr.url", "http://deasy.dans.knaw.nl:8983/solr/easyfiles")
       addProperty("vault.url", "http://deasy.dans.knaw.nl:20110/")
     }
-  } with EasyUpdateSolr4filesIndexApp(new ApplicationWiring(new Configuration("", properties)))
+  } with EasySolr4filesIndexApp(new ApplicationWiring(new Configuration("", properties)))
   private val app = mock[App]
   addServlet(new UpdateServlet(app), "/*")
 
