@@ -62,7 +62,7 @@ class SolrErrorHandlingSpec extends TestSupportFixture
     }
   }
 
-  private val app = new EasyUpdateSolr4filesIndexApp(new StubbedWiring)
+  private val app = new EasySolr4filesIndexApp(new StubbedWiring)
   addServlet(new UpdateServlet(app), "/fileindex/*")
   addServlet(new SearchServlet(app), "/filesearch/*")
 

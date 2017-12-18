@@ -24,7 +24,7 @@ import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 
 import scala.util.{ Success, Try }
 
-class EasyUpdateSolr4filesIndexApp(wiring: ApplicationWiring) extends AutoCloseable
+class EasySolr4filesIndexApp(wiring: ApplicationWiring) extends AutoCloseable
   with DebugEnhancedLogging {
 
   def initAllStores(): Try[String] = wiring.initAllStores()

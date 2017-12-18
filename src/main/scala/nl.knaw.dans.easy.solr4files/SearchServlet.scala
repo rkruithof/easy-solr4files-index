@@ -30,7 +30,7 @@ import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 import scala.util.{ Failure, Success, Try }
 import scalaj.http.HttpResponse
 
-class SearchServlet(app: EasyUpdateSolr4filesIndexApp) extends ScalatraServlet with DebugEnhancedLogging {
+class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with DebugEnhancedLogging {
   logger.info("File index Servlet running...")
 
   private def respond(result: Try[String]): ActionResult = {

@@ -29,7 +29,7 @@ object Command extends App with DebugEnhancedLogging {
 
   val configuration = Configuration(Paths.get(System.getProperty("app.home")))
   val commandLine: CommandLineOptions = new CommandLineOptions(args, configuration)
-  val app = new EasyUpdateSolr4filesIndexApp(new ApplicationWiring(configuration))
+  val app = new EasySolr4filesIndexApp(new ApplicationWiring(configuration))
 
   managed(app)
     .acquireAndGet(app => {
@@ -42,7 +42,7 @@ object Command extends App with DebugEnhancedLogging {
     .doIfFailure { case e => logger.error(e.getMessage, e) }
     .doIfFailure { case NonFatal(e) => println(s"FAILED: ${ e.getMessage }") }
 
-  private def runCommand(app: EasyUpdateSolr4filesIndexApp): Try[FeedBackMessage] = {
+  private def runCommand(app: EasySolr4filesIndexApp): Try[FeedBackMessage] = {
     commandLine.subcommand
       .collect {
         case update @ commandLine.update => app.update(update.bagStore(), update.bagUuid())
@@ -56,7 +56,7 @@ object Command extends App with DebugEnhancedLogging {
   }
 
   private def runAsService(): Try[FeedBackMessage] = Try {
-    val server = new EasyUpdateSolr4filesIndexService(configuration.properties.getInt("solr4files.daemon.http.port"), app)
+    val server = new EasySolr4filesIndexService(configuration.properties.getInt("solr4files.daemon.http.port"), app)
     Runtime.getRuntime.addShutdownHook(new Thread("service-shutdown") {
       override def run(): Unit = {
         logger.info("Stopping service ...")

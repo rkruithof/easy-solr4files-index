@@ -25,7 +25,7 @@ import org.scalatra._
 import scala.util.Try
 import scalaj.http.HttpResponse
 
-class UpdateServlet(app: EasyUpdateSolr4filesIndexApp) extends ScalatraServlet with DebugEnhancedLogging {
+class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with DebugEnhancedLogging {
   logger.info("File index Servlet running...")
 
   get("/") {

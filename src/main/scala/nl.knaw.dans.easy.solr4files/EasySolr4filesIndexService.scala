@@ -25,7 +25,7 @@ import org.scalatra.servlet.ScalatraListener
 
 import scala.util.Try
 
-class EasyUpdateSolr4filesIndexService(val serverPort: Int, app: EasyUpdateSolr4filesIndexApp) extends DebugEnhancedLogging {
+class EasySolr4filesIndexService(val serverPort: Int, app: EasySolr4filesIndexApp) extends DebugEnhancedLogging {
 
   private val server = new Server(serverPort) {
     this.setHandler(new ServletContextHandler(ServletContextHandler.NO_SESSIONS) {
