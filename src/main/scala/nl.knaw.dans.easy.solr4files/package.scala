@@ -47,11 +47,11 @@ package object solr4files extends DebugEnhancedLogging {
 
   case class AuthorisationNotAvailableException(cause: Throwable)
     extends Exception(cause.getMessage, cause) {
-    logger.info(cause.getLocalizedMessage, cause)
+    logger.info(cause.getMessage, cause)
   }
   case class AuthorisationTypeNotSupportedException(cause: Throwable)
     extends Exception(cause.getMessage, cause) {
-    logger.info(cause.getLocalizedMessage, cause)
+    logger.info(cause.getMessage, cause)
   }
 
   case class SolrStatusException(namedList: NamedList[AnyRef])

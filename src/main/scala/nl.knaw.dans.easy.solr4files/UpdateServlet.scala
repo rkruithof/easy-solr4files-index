@@ -45,7 +45,9 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
         case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_NOT_FOUND => NotFound(msgPrefix + message)
         case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_SERVICE_UNAVAILABLE => ServiceUnavailable(msgPrefix + message)
         case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_REQUEST_TIMEOUT => RequestTimeout(msgPrefix + message)
-        case e => InternalServerError(e.getMessage)
+        case t =>
+          logger.error(s"not expected exception", t)
+          InternalServerError(t.getMessage) // for an internal servlet we can and should expose the cause
       }
   }
 
@@ -58,32 +60,44 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
   }
 
   post("/update/:store/:uuid") {
-    getUUID
+    val result = getUUID
       .map(uuid => respond(app.update(params("store"), uuid)))
       .getOrRecover(badUuid)
+    logger.info(s"update returned ${ response.status.line } for $params")
+    result
   }
 
   post("/init") {
-    respond(app.initAllStores())
+    val result = respond(app.initAllStores())
+    logger.info(s"update returned ${ response.status.line } for $params")
+    result
   }
 
   post("/init/:store") {
-    respond(app.initSingleStore(params("store")))
+    val result = respond(app.initSingleStore(params("store")))
+    logger.info(s"update returned ${ response.status.line } for $params")
+    result
   }
 
   delete("/:store/:uuid") {
-    getUUID
+    val result = getUUID
       .map(uuid => respond(app.delete(s"easy_dataset_id:$uuid")))
       .getOrRecover(badUuid)
+    logger.info(s"update returned ${ response.status.line } for $params")
+    result
   }
 
   delete("/:store") {
-    respond(app.delete(s"easy_dataset_store_id:${ params("store") }"))
+    val result = respond(app.delete(s"easy_dataset_store_id:${ params("store") }"))
+    logger.info(s"update returned ${ response.status.line } for $params")
+    result
   }
 
   delete("/") {
-    params.get("q")
+    val result = params.get("q")
       .map(q => respond(app.delete(q)))
       .getOrElse(BadRequest("delete requires param 'q', got " + params.asString))
+    logger.info(s"update returned ${ response.status.line } for $params")
+    result
   }
 }

@@ -159,8 +159,8 @@ class SearchServletSpec extends TestSupportFixture
 
   it should "report no authentication available" in {
     get(s"/?text=nothing", headers = Map("Authorization" -> ("Basic " + Base64.encodeString("somebody:secret")))) {
-      status shouldBe SC_SERVICE_UNAVAILABLE
       body shouldBe "Authentication service not available, try anonymous search"
+      status shouldBe SC_SERVICE_UNAVAILABLE
     }
   }
 

@@ -17,8 +17,6 @@ package nl.knaw.dans.easy.solr4files
 
 import java.net.{ URI, URL }
 import java.util.UUID
-import javax.naming.Context
-import javax.naming.ldap.{ InitialLdapContext, LdapContext }
 
 import nl.knaw.dans.easy.solr4files.components._
 import nl.knaw.dans.lib.error._
@@ -37,21 +35,12 @@ class ApplicationWiring(configuration: Configuration)
   extends DebugEnhancedLogging
     with Vault
     with Solr
-    with LdapAuthenticationComponent {
+    with AuthenticationComponent {
 
   private val properties: PropertiesConfiguration = configuration.properties
-  override val authentication: Authentication = new LdapAuthentication {}
-  override val ldapUsersEntry: String = properties.getString("ldap.users-entry")
-  override val ldapProviderUrl: String = properties.getString("ldap.provider.url")
-  override val ldapContext: Try[LdapContext] = Try { // TODO fail at service startup
-    val env = new java.util.Hashtable[String, String] {
-      put(Context.SECURITY_AUTHENTICATION, "simple")
-      put(Context.SECURITY_PRINCIPAL, properties.getString("ldap.securityPrincipal"))
-      put(Context.SECURITY_CREDENTIALS, properties.getString("ldap.securityCredentials"))
-      put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
-      put(Context.PROVIDER_URL, ldapProviderUrl)
-    }
-    new InitialLdapContext(env, null)
+  override val authentication: Authentication = new Authentication {
+    override val ldapUsersEntry: String = properties.getString("ldap.users-entry")
+    override val ldapProviderUrl: String = properties.getString("ldap.provider.url")
   }
 
   // don't need resolve for solr, URL gives more early errors TODO perhaps not yet at service startup once implemented
