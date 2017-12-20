@@ -61,6 +61,7 @@ class SearchServletSpec extends TestSupportFixture
             // a sorted order makes testing easier
             put("easy_file_name", "some.png")
             put("easy_file_size", "123")
+            put("easy_dataset_depositor_id", "someBody")
           }))
         }
       }

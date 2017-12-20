@@ -37,7 +37,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
     result.map(Ok(_))
       .doIfFailure { case e => logger.error(e.getMessage, e) }
       .getOrRecover {
-        case SolrBadRequestException(message, _) => BadRequest(message) // delete or search only
+        case SolrBadRequestException(message, _) => BadRequest(message)
         case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_NOT_FOUND => NotFound(message)
         case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_SERVICE_UNAVAILABLE => ServiceUnavailable(message)
         case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_REQUEST_TIMEOUT => RequestTimeout(message)
@@ -48,6 +48,9 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
   get("/") {
     logger.info(s"file search request: $params")
     contentType = "application/json"
+
+    val fetchFields = Seq("easy_dataset_*", "easy_file_*") // TODO params.get("???") but what is possible allowed?
+    val fetchExceptions = Seq("easy_dataset_depositor_id")
 
     // no command line equivalent, use http://localhost:8983/solr/#/fileitems/query
     // or for example:           curl 'http://localhost:8983/solr/fileitems/query?q=*'
@@ -64,7 +67,10 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
     result
   }
 
-  private def createQuery(user: Option[User]) = {
+  /**
+   * @return the URI params of the request translated into a Solr search request
+   */
+  private def createQuery(user: Option[User], fetch: Seq[String]) = {
     // invalid optional values are replaced by the default value
     val rows = params.get("limit").withFilter(_.matches("[1-9][0-9]*")).map(_.toInt).getOrElse(10)
     val start = params.get("skip").withFilter(_.matches("[0-9]+")).map(_.toInt).getOrElse(0)
@@ -81,10 +87,10 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
       }
       accessibilityFilters(user)
         .foreach(q => addFilterQuery(q))
+      fetch.foreach(addField)
       userSpecifiedFilters()
         .withFilter(_.isDefined)
         .foreach(fqOpt => addFilterQuery(fqOpt.get))
-      setFields("easy_dataset_*", "easy_file_*") // TODO user configurable like rows and start?
       setStart(start)
       setRows(rows) // todo max from application.properties
       setTimeAllowed(5000) // 5 seconds TODO configurable in application.properties

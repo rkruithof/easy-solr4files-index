@@ -16,10 +16,8 @@
 package nl.knaw.dans.easy.solr4files.components
 
 import java.net.URL
-import java.util
 
 import nl.knaw.dans.easy.solr4files._
-import nl.knaw.dans.easy.solr4files.components.Solr._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.http.HttpStatus._
 import org.apache.solr.client.solrj.SolrRequest.METHOD
@@ -29,10 +27,9 @@ import org.apache.solr.client.solrj.response.{ SolrResponseBase, UpdateResponse 
 import org.apache.solr.client.solrj.{ SolrClient, SolrQuery }
 import org.apache.solr.common.util.{ ContentStreamBase, NamedList }
 import org.apache.solr.common.{ SolrDocumentList, SolrInputDocument }
-import org.json4s
-import org.json4s.JField
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
+import org.json4s.{ JField, JValue }
 
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
@@ -45,12 +42,7 @@ trait Solr extends DebugEnhancedLogging {
   def createDoc(item: FileItem): Try[FileFeedback] = {
     item.bag.fileUrl(item.path).flatMap { fileUrl =>
       val solrDocId = s"${ item.bag.bagId }/${ item.path }"
-      // TODO only normalise whitespace for item.ddm.solrLiterals and then only trim all values
       val solrFields = (item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals :+ "file_size" -> item.size.toString)
-        .map {
-          case (k, v) if k == "file_path" => (k, v.trim) // do not normalise whitespace in filepath
-          case (k, v) => (k, v.replaceAll("\\s+", " ").trim)
-        }
         .filter { case (_, v) => v.nonEmpty }
       if (logger.underlying.isDebugEnabled) logger.debug(solrFields
         .map { case (key, value) => s"$key = $value" }
@@ -59,7 +51,8 @@ trait Solr extends DebugEnhancedLogging {
       if (!item.shouldSubmitWithContent) {
         logger.info(s"Submission without content of [$solrDocId]")
         submitWithOnlyMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
-      } else {
+      }
+      else {
         logger.info(s"Submission with content of [$solrDocId]")
         submitWithContent(fileUrl, solrDocId, solrFields)
           .map(_ => FileSubmittedWithContent(solrDocId))
@@ -86,28 +79,30 @@ trait Solr extends DebugEnhancedLogging {
   }
 
 
-  private def toJson(solrDocumentList: SolrDocumentList, query: SolrQuery): String = {
-    val fileItems = (0L until solrDocumentList.size()).map { i =>
-      solrDocumentList.get(i.toInt).getFieldValueMap.toJObject
-    }
+  private def toJson(query: SolrQuery, numFound: Long, fileItems: Seq[List[(String, JValue)]]) = {
     val result =
       ("summary" -> (
         ("text" -> query.getQuery) ~
           ("skip" -> query.getStart.toInt) ~
           ("limit" -> query.getRows.toInt) ~
           ("time_allowed" -> query.getTimeAllowed.toInt) ~
-          ("found" -> solrDocumentList.getNumFound) ~
+          ("found" -> numFound) ~
           ("returned" -> fileItems.size)
         )) ~
         ("fileitems" -> fileItems)
     pretty(render(result))
   }
 
-  def search(query: SolrQuery): Try[String] = {
+  /**
+   * @param skipFetched fields to skip from fetched sets of fields specified with a wild card
+   */
+  def search(query: SolrQuery, skipFetched: Seq[String]): Try[String] = {
     (for {
       response <- Try(solrClient.query(query))
       _ <- checkResponseStatus(response)
-    } yield toJson(response.getResults, query) // .getFacet.Xxx, .getGroupXxx .getSortedXxx .getMoreLikeXxx etc.
+      results = response.getResults
+      fileItems = fileItemsAsJson(results, skipFetched)
+    } yield toJson(query, results.getNumFound, fileItems) // .getFacet.Xxx, .getGroupXxx .getSortedXxx .getMoreLikeXxx etc.
       ).recoverWith {
       case t: HttpSolrClient.RemoteSolrException if isParseException(t) =>
         Failure(SolrBadRequestException(t.getMessage, t))
@@ -165,15 +160,12 @@ trait Solr extends DebugEnhancedLogging {
       .map(_ => Failure(SolrStatusException(namedList)))
       .getOrElse(Success(()))
   }
-}
 
-object Solr {
-  implicit class RichMap(val fieldValueMap: util.Map[String, AnyRef]) extends AnyVal {
-    def toJObject: List[(String, json4s.JValue)] = {
-      fieldValueMap
-        .keySet()
-        .asScala
-        .filter(_ != "easy_dataset_depositor_id")
+  private def fileItemsAsJson(solrDocumentList: SolrDocumentList, skip: Seq[String]) = {
+    (0L until solrDocumentList.size()).map { i =>
+      val fieldValueMap = solrDocumentList.get(i.toInt).getFieldValueMap
+      fieldValueMap.keySet().asScala // asScala on the map throws NotImplementedException
+        .filter(!skip.contains(_))
         .map(key => JField(key.replace("easy_", ""), fieldValueMap.get(key).toString))
         .toList
     }
