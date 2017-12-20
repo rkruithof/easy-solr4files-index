@@ -55,7 +55,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
     // no command line equivalent, use http://localhost:8983/solr/#/fileitems/query
     // or for example:           curl 'http://localhost:8983/solr/fileitems/query?q=*'
     val result = app.authenticate(new BasicAuthRequest(request)) match {
-      case (Success(user)) => respond(app.search(createQuery(user)))
+      case (Success(user)) => respond(app.search(createQuery(user, fetchFields), fetchExceptions))
       case (Failure(InvalidUserPasswordException(_, _))) => Unauthorized()
       case (Failure(AuthorisationNotAvailableException(_))) => ServiceUnavailable("Authentication service not available, try anonymous search")
       case (Failure(AuthorisationTypeNotSupportedException(_))) => BadRequest("Only anonymous search or basic authentication supported")
