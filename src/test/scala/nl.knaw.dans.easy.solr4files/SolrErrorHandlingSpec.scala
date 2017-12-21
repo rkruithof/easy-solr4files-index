@@ -28,7 +28,8 @@ class SolrErrorHandlingSpec extends TestSupportFixture
   with ServletFixture
   with ScalatraSuite {
 
-  private class StubbedWiring extends ApplicationWiring(configWithMockedVault) {
+  private class StubbedApp extends EasySolr4filesIndexApp() {
+    override lazy val configuration: Configuration = configWithMockedVault
 
     override lazy val solrClient: SolrClient = new SolrClient() {
       // can't use mock because SolrClient has a final method
@@ -62,7 +63,7 @@ class SolrErrorHandlingSpec extends TestSupportFixture
     }
   }
 
-  private val app = new EasySolr4filesIndexApp(new StubbedWiring)
+  private val app = new StubbedApp
   addServlet(new UpdateServlet(app), "/fileindex/*")
   addServlet(new SearchServlet(app), "/filesearch/*")
 

@@ -61,7 +61,7 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
 
   post("/update/:store/:uuid") {
     val result = getUUID
-      .map(uuid => respond(app.update(params("store"), uuid)))
+      .map(uuid => respond(app.update(params("store"), uuid).map(_.msg)))
       .getOrRecover(badUuid)
     logger.info(s"update returned ${ response.status.line } for $params")
     result
@@ -74,7 +74,7 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
   }
 
   post("/init/:store") {
-    val result = respond(app.initSingleStore(params("store")))
+    val result = respond(app.initSingleStore(params("store")).map(_.msg))
     logger.info(s"update returned ${ response.status.line } for $params")
     result
   }

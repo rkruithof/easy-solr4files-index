@@ -29,7 +29,7 @@ object Command extends App with DebugEnhancedLogging {
 
   val configuration = Configuration(Paths.get(System.getProperty("app.home")))
   val commandLine: CommandLineOptions = new CommandLineOptions(args, configuration)
-  val app = new EasySolr4filesIndexApp(new ApplicationWiring(configuration))
+  val app = EasySolr4filesIndexApp(configuration)
 
   managed(app)
     .acquireAndGet(app => {
@@ -45,10 +45,10 @@ object Command extends App with DebugEnhancedLogging {
   private def runCommand(app: EasySolr4filesIndexApp): Try[FeedBackMessage] = {
     commandLine.subcommand
       .collect {
-        case update @ commandLine.update => app.update(update.bagStore(), update.bagUuid())
+        case update @ commandLine.update => app.update(update.bagStore(), update.bagUuid()).map(_.msg)
         case delete @ commandLine.delete => app.delete(delete.query())
         case init @ commandLine.init => init.bagStore.toOption
-          .map(app.initSingleStore)
+          .map(app.initSingleStore(_).map(_.msg))
           .getOrElse(app.initAllStores())
         case commandLine.runService => runAsService()
       }

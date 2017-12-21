@@ -17,7 +17,6 @@ package nl.knaw.dans.easy.solr4files
 
 import java.util.UUID
 
-import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.http.HttpStatus._
 import org.scalamock.scalatest.MockFactory
 import org.scalatra.test.scalatest.ScalatraSuite
@@ -30,14 +29,10 @@ class UpdateServletSpec extends TestSupportFixture
   with ScalatraSuite
   with MockFactory {
 
-  private class App extends {
-    // mock needs a constructor without arguments
-    private val properties: PropertiesConfiguration = new PropertiesConfiguration() {
-      addProperty("solr.url", "http://deasy.dans.knaw.nl:8983/solr/easyfiles")
-      addProperty("vault.url", "http://deasy.dans.knaw.nl:20110/")
-    }
-  } with EasySolr4filesIndexApp(new ApplicationWiring(new Configuration("", properties)))
-  private val app = mock[App]
+  private class App extends EasySolr4filesIndexApp() {
+    override lazy val configuration: Configuration = configWithMockedVault
+  }
+  private val app = mock[EasySolr4filesIndexApp]
   addServlet(new UpdateServlet(app), "/*")
 
   private val uuid = UUID.randomUUID()
@@ -60,7 +55,7 @@ class UpdateServletSpec extends TestSupportFixture
 
   it should "return a feedback message for a single store" in {
     (app.initSingleStore(_: String)) expects "pdbs" once() returning
-      Success("xxx")
+      Success(StoreSubmitted("xxx"))
     post("/init/pdbs") {
       body shouldBe "xxx"
       status shouldBe SC_OK
@@ -76,7 +71,7 @@ class UpdateServletSpec extends TestSupportFixture
 
   "post /update/:store/:uuid" should "return a feedback message" in {
     (app.update(_: String, _: UUID)) expects("pdbs", uuid) once() returning
-      Success("12 files submitted")
+      Success(BagSubmitted("12 files submitted", Seq.empty))
     post(s"/update/pdbs/$uuid") {
       body shouldBe "12 files submitted"
       status shouldBe SC_OK

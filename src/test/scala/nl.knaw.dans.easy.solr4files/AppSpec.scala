@@ -27,11 +27,12 @@ import org.apache.solr.common.util.NamedList
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success }
 
-class ApplicationWiringSpec extends TestSupportFixture {
+class AppSpec extends TestSupportFixture {
 
   private val store = "pdbs"
 
-  private class MockedAndStubbedWiring extends ApplicationWiring(configWithMockedVault) {
+  private class MockedAndStubbedApp extends EasySolr4filesIndexApp() {
+    override lazy val configuration: Configuration = configWithMockedVault
     override lazy val solrClient: SolrClient = new SolrClient() {
       // can't use mock because SolrClient has a final method
 
@@ -72,7 +73,7 @@ class ApplicationWiringSpec extends TestSupportFixture {
   "update" should "call the stubbed solrClient.request" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val result = new MockedAndStubbedWiring().update(store, uuidCentaur)
+    val result = new MockedAndStubbedApp().update(store, uuidCentaur)
     inside(result) { case Success(feedback) =>
       feedback.toString shouldBe s"Bag ${ uuidCentaur }: 7 times FileSubmittedWithContent, 2 times FileSubmittedWithOnlyMetadata"
     }
@@ -81,14 +82,14 @@ class ApplicationWiringSpec extends TestSupportFixture {
   it should "not stumble on difficult file names" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val result = new MockedAndStubbedWiring().update(store, uuidAnonymized)
+    val result = new MockedAndStubbedApp().update(store, uuidAnonymized)
     inside(result) { case Success(feedback) =>
       feedback.toString shouldBe s"Bag ${ uuidAnonymized }: 3 times FileSubmittedWithContent"
     }
   }
 
   "delete" should "call the stubbed solrClient.deleteByQuery" in {
-    val result = new MockedAndStubbedWiring().delete("*:*")
+    val result = new MockedAndStubbedApp().delete("*:*")
     inside(result) { case Success(msg) =>
       msg shouldBe s"Deleted documents with query *:*"
     }
@@ -103,7 +104,9 @@ class ApplicationWiringSpec extends TestSupportFixture {
         |    f70c19a5-0725-4950-aa42-6489a9d73806
         |    6ccadbad-650c-47ec-936d-2ef42e5f3cda""".stripMargin
     )
-    val result = new ApplicationWiring(configWithMockedVault) {
+    val result = new EasySolr4filesIndexApp {
+      override lazy val configuration: Configuration = configWithMockedVault
+
       // vaultBagIds/bags can't be a file and directory so we need a stub, a failure demonstrates it's called
       override def update(store: String, uuid: UUID) =
         Failure(new Exception("stubbed ApplicationWiring.update"))
@@ -120,7 +123,9 @@ class ApplicationWiringSpec extends TestSupportFixture {
         |    <http://localhost:20110/stores/rabarbera>
         |    <http://localhost:20110/stores/barbapapa>""".stripMargin
     )
-    val result = new ApplicationWiring(configWithMockedVault) {
+    val result = new EasySolr4filesIndexApp {
+      override lazy val configuration: Configuration = configWithMockedVault
+
       // vaultStoreNames/stores can't be a file and directory so we need a stub, a failure demonstrates it's called
       override def initSingleStore(store: String) = Failure(new Exception("stubbed ApplicationWiring.initSingleStore"))
     }.initAllStores()

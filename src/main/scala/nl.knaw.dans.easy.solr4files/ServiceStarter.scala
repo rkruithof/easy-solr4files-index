@@ -27,7 +27,7 @@ class ServiceStarter extends Daemon with DebugEnhancedLogging {
   override def init(context: DaemonContext): Unit = {
     logger.info("Initializing service...")
     val configuration = Configuration(Paths.get(System.getProperty("app.home")))
-    app = new EasySolr4filesIndexApp(new ApplicationWiring(configuration))
+    app = EasySolr4filesIndexApp(configuration)
     service = new EasySolr4filesIndexService(configuration.properties.getInt("solr4files.daemon.http.port"), app)
     logger.info("Service initialized.")
   }
