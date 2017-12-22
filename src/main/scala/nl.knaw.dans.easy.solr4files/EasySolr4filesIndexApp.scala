@@ -24,7 +24,7 @@ import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 
 import scala.util.{ Success, Try }
 
-class EasyUpdateSolr4filesIndexApp(wiring: ApplicationWiring) extends AutoCloseable
+class EasySolr4filesIndexApp(wiring: ApplicationWiring) extends AutoCloseable
   with DebugEnhancedLogging {
 
   def initAllStores(): Try[String] = wiring.initAllStores()
@@ -35,7 +35,7 @@ class EasyUpdateSolr4filesIndexApp(wiring: ApplicationWiring) extends AutoClosea
 
   def delete(query: String): Try[String] = wiring.delete(query)
 
-  def search(query: SolrQuery): Try[String] = wiring.search(query)
+  def search(query: SolrQuery, skipFetched: Seq[String]): Try[String] = wiring.search(query, skipFetched)
 
   def authenticate(authRequest: BasicAuthRequest): Try[Option[User]] = wiring.authentication.authenticate(authRequest)
 

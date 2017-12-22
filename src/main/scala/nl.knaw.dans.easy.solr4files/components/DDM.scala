@@ -138,7 +138,7 @@ object DDM {
       }
     }
 
-    (solrField, internal().mkString(" "))
+    (solrField, internal().mkString(" ").replaceAll("\\s+", " ").trim)
   }
 
   private def loadVocabularies(xsdURL: String): Map[String, VocabularyMap] = {

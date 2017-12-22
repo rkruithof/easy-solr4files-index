@@ -1,27 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
 		<encoder>
-			<pattern>[%date{ISO8601}] %-5level %msg %n</pattern>
+			<pattern>%-5level %msg%n</pattern>
 		</encoder>
 	</appender>
 
-	<appender name="FILE"
-			  class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>data/easy-solr4files-index.log</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>data/easy-solr4files-index.%d{yyyy-MM-dd}.log</fileNamePattern>
-			<maxHistory>30</maxHistory>
-		</rollingPolicy>
-		<encoder>
-			<pattern>[%date{ISO8601}] %-5level %msg%n</pattern>
-		</encoder>
-	</appender>
-	<root level="warn">
-		<appender-ref ref="FILE"/>
-		<appender-ref ref="STDOUT"/>
+	<!-- No logging during the build -->
+	<root level="off" >
+		<appender-ref ref="STDOUT" />
 	</root>
-	<logger name="nl.knaw.dans.easy" level="trace"/>
+
+	<!-- Set log level during test with system property, e.g., mvn test -DLOG_LEVEL=debug -->
+	<logger name="nl.knaw.dans.easy" level="${LOG_LEVEL:-off}" />
+	<logger name="org.scalatest" level="info" />
+
 </configuration>

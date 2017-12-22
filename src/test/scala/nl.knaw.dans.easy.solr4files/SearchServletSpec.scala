@@ -61,13 +61,14 @@ class SearchServletSpec extends TestSupportFixture
             // a sorted order makes testing easier
             put("easy_file_name", "some.png")
             put("easy_file_size", "123")
+            put("easy_dataset_depositor_id", "someBody")
           }))
         }
       }
     }
   }
 
-  private val app = new EasyUpdateSolr4filesIndexApp(new StubbedWiring)
+  private val app = new EasySolr4filesIndexApp(new StubbedWiring)
   addServlet(new SearchServlet(app), "/*")
 
   "get /" should "translate to searching with *:* and the default parser" in {
@@ -159,8 +160,8 @@ class SearchServletSpec extends TestSupportFixture
 
   it should "report no authentication available" in {
     get(s"/?text=nothing", headers = Map("Authorization" -> ("Basic " + Base64.encodeString("somebody:secret")))) {
-      status shouldBe SC_SERVICE_UNAVAILABLE
       body shouldBe "Authentication service not available, try anonymous search"
+      status shouldBe SC_SERVICE_UNAVAILABLE
     }
   }
 

@@ -21,14 +21,14 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.daemon.{ Daemon, DaemonContext }
 
 class ServiceStarter extends Daemon with DebugEnhancedLogging {
-  var app: EasyUpdateSolr4filesIndexApp = _
-  var service: EasyUpdateSolr4filesIndexService = _
+  var app: EasySolr4filesIndexApp = _
+  var service: EasySolr4filesIndexService = _
 
   override def init(context: DaemonContext): Unit = {
     logger.info("Initializing service...")
     val configuration = Configuration(Paths.get(System.getProperty("app.home")))
-    app = new EasyUpdateSolr4filesIndexApp(new ApplicationWiring(configuration))
-    service = new EasyUpdateSolr4filesIndexService(configuration.properties.getInt("solr4files.daemon.http.port"), app)
+    app = new EasySolr4filesIndexApp(new ApplicationWiring(configuration))
+    service = new EasySolr4filesIndexService(configuration.properties.getInt("solr4files.daemon.http.port"), app)
     logger.info("Service initialized.")
   }
 

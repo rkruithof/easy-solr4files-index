@@ -49,6 +49,8 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     new Configuration("", new PropertiesConfiguration() {
       addProperty("solr.url", "http://deasy.dans.knaw.nl:8983/solr/easyfiles")
       addProperty("vault.url", mockedVault.vaultBaseUri.toURL.toString)
+      addProperty("ldap.users-entry", "ou=users,ou=easy,dc=dans,dc=knaw,dc=nl")
+      addProperty("ldap.provider.url", "ldap://localhost:389")
     })
   }
 
