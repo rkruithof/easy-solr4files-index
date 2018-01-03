@@ -17,27 +17,107 @@ package nl.knaw.dans.easy.solr4files
 
 import java.util.UUID
 
-import nl.knaw.dans.easy.solr4files.components.User
+import nl.knaw.dans.easy.solr4files.components.{ Bag, DDM, FileItem, User }
+import nl.knaw.dans.lib.error.{ CompositeException, _ }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.solr.client.solrj.SolrQuery
 import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 
-import scala.util.{ Success, Try }
+import scala.util.{ Failure, Success, Try }
+import scala.xml.Elem
 
-class EasySolr4filesIndexApp(wiring: ApplicationWiring) extends AutoCloseable
+trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
   with DebugEnhancedLogging {
 
-  def initAllStores(): Try[String] = wiring.initAllStores()
+  def initAllStores(): Try[FeedBackMessage] = {
+    getStoreNames
+      .flatMap(updateStores)
+  }
 
-  def initSingleStore(storeName: String): Try[String] = wiring.initSingleStore(storeName).map(_.toString)
+  def initSingleStore(storeName: String): Try[StoreSubmitted] = {
+    getBagIds(storeName)
+      .flatMap(updateBags(storeName, _))
+  }
 
-  def update(storeName: String, bagId: UUID): Try[String] = wiring.update(storeName, bagId).map(_.toString)
+  def update(storeName: String, bagId: UUID): Try[BagSubmitted] = {
+    val bag = Bag(storeName, bagId, this)
+    for {
+      ddmXML <- bag.loadDDM
+      ddm = new DDM(ddmXML)
+      filesXML <- bag.loadFilesXML
+      _ = logger.info(s"deleted documents of $bagId")
+      _ <- deleteDocuments(s"id:${ bag.bagId }*")
+      feedbackMessage <- updateFiles(bag, ddm, filesXML)
+      _ <- commit()
+      _ = logger.info(s"committed $feedbackMessage")
+    } yield feedbackMessage
+  }.recoverWith {
+    case t: SolrStatusException => commitAnyway(t) // just the delete
+    case t: SolrUpdateException => commitAnyway(t) // just the delete
+    case t: MixedResultsException[_] => commitAnyway(t) // delete and some files
+    case t => Failure(t)
+  }
 
-  def delete(query: String): Try[String] = wiring.delete(query)
+  def delete(query: String): Try[FeedBackMessage] = {
+    for {
+      _ <- deleteDocuments(query)
+      _ <- commit()
+    } yield s"Deleted documents with query $query"
+  }.recoverWith {
+    case t: SolrCommitException => Failure(t)
+    case t =>
+      commit()
+      Failure(t)
+  }
 
-  def search(query: SolrQuery, skipFetched: Seq[String]): Try[String] = wiring.search(query, skipFetched)
+  private def commitAnyway(t: Throwable): Try[Nothing] = {
+    commit()
+      .map(_ => Failure(t))
+      .getOrRecover(t2 => Failure(new CompositeException(t2, t)))
+  }
 
-  def authenticate(authRequest: BasicAuthRequest): Try[Option[User]] = wiring.authentication.authenticate(authRequest)
+  /**
+   * The number of bags submitted per store are logged as info
+   * if and when another store in the vault failed.
+   */
+  private def updateStores(storeNames: Seq[String]): Try[FeedBackMessage] = {
+    storeNames
+      .toStream
+      .map(initSingleStore)
+      .takeUntilFailure
+      .doIfFailure { case MixedResultsException(results: Seq[_], _) => results.foreach(fb => logger.info(fb.toString)) }
+      .map(storeSubmittedSeq => s"Updated ${ storeNames.size } stores: ${ storeSubmittedSeq.map(_.msg).mkString(", ") }.")
+  }
+
+  /**
+   * The number of files submitted with or without content per bag are logged as info
+   * if and when another bag in the same store failed.
+   */
+  private def updateBags(storeName: String, bagIds: Seq[UUID]): Try[StoreSubmitted] = {
+    bagIds
+      .toStream
+      .map(update(storeName, _))
+      .takeUntilFailure
+      .doIfFailure { case MixedResultsException(results: Seq[_], _) => results.foreach(fb => logger.info(fb.toString)) }
+      .map(_ => StoreSubmitted(s"${ bagIds.size } bags for $storeName"))
+  }
+
+  /**
+   * Files submitted without content are logged immediately as warning.
+   * Files submitted with content are logged as info
+   * if and when another file in the same bag failed.
+   */
+  private def updateFiles(bag: Bag, ddm: DDM, filesXML: Elem): Try[BagSubmitted] = {
+    (filesXML \ "file")
+      .map(FileItem(bag, ddm, _))
+      .filter(_.shouldIndex)
+      .toStream
+      .map(f => createDoc(f))
+      .takeUntilFailure
+      .doIfFailure { case MixedResultsException(results: Seq[_], _) => results.foreach(fb => logger.info(fb.toString)) }
+      .map(results => BagSubmitted(bag.bagId.toString, results))
+  }
+
+  def authenticate(authRequest: BasicAuthRequest): Try[Option[User]] = authentication.authenticate(authRequest)
 
   def init(): Try[Unit] = {
     // Do any initialization of the application here. Typical examples are opening
@@ -47,5 +127,12 @@ class EasySolr4filesIndexApp(wiring: ApplicationWiring) extends AutoCloseable
 
   override def close(): Unit = {
 
+  }
+}
+
+object EasySolr4filesIndexApp {
+
+  def apply(conf: Configuration): EasySolr4filesIndexApp = new EasySolr4filesIndexApp {
+    override lazy val configuration: Configuration = conf
   }
 }

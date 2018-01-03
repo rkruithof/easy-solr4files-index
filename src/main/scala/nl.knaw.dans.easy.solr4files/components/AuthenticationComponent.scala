@@ -21,7 +21,7 @@ import javax.naming.directory.{ Attribute, SearchControls, SearchResult }
 import javax.naming.ldap.InitialLdapContext
 import javax.naming.{ AuthenticationException, Context }
 
-import nl.knaw.dans.easy.solr4files.{ AuthorisationNotAvailableException, AuthorisationTypeNotSupportedException, InvalidUserPasswordException }
+import nl.knaw.dans.easy.solr4files.{ AuthenticationNotAvailableException, AuthenticationTypeNotSupportedException, InvalidUserPasswordException }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 import resource.managed
@@ -41,7 +41,7 @@ trait AuthenticationComponent extends DebugEnhancedLogging {
 
       (authRequest.providesAuth, authRequest.isBasicAuth) match {
         case (true, true) => getUser(authRequest.username, authRequest.password).map(Some(_))
-        case (true, _) => Failure(AuthorisationTypeNotSupportedException(new Exception("Supporting only basic authentication")))
+        case (true, _) => Failure(AuthenticationTypeNotSupportedException(new Exception("Supporting only basic authentication")))
         case (_, _) => Success(None)
       }
     }
@@ -69,7 +69,7 @@ trait AuthenticationComponent extends DebugEnhancedLogging {
           .tried
       }.recoverWith {
         case t: AuthenticationException => Failure(InvalidUserPasswordException(userName, new Exception("invalid password", t)))
-        case t => Failure(AuthorisationNotAvailableException(t))
+        case t => Failure(AuthenticationNotAvailableException(t))
       }
 
       def getFirst(list: List[SearchResult]): Try[SearchResult] = {

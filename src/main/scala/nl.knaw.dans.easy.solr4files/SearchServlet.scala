@@ -57,8 +57,8 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
     val result = app.authenticate(new BasicAuthRequest(request)) match {
       case (Success(user)) => respond(app.search(createQuery(user, fetchFields), fetchExceptions))
       case (Failure(InvalidUserPasswordException(_, _))) => Unauthorized()
-      case (Failure(AuthorisationNotAvailableException(_))) => ServiceUnavailable("Authentication service not available, try anonymous search")
-      case (Failure(AuthorisationTypeNotSupportedException(_))) => BadRequest("Only anonymous search or basic authentication supported")
+      case (Failure(AuthenticationNotAvailableException(_))) => ServiceUnavailable("Authentication service not available, try anonymous search")
+      case (Failure(AuthenticationTypeNotSupportedException(_))) => BadRequest("Only anonymous search or basic authentication supported")
       case (Failure(t)) =>
         logger.error(s"not expected exception", t)
         InternalServerError("not expected exception")
