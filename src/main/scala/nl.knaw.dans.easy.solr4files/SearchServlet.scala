@@ -63,7 +63,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
         logger.error(s"not expected exception", t)
         InternalServerError("not expected exception")
     }
-    logger.info(s"file search returned ${ response.status.line } for $params")
+    logger.info(s"file search returned ${ result.status } for $params")
     result
   }
 
