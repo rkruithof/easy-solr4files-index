@@ -38,6 +38,8 @@ class FileItemSpec extends TestSupportFixture {
 
     val solrLiterals = fi.solrLiterals.toMap
     solrLiterals("file_path") shouldBe fi.path
+    solrLiterals("file_size") shouldBe "0"
+    solrLiterals("file_title") shouldBe "video about the centaur meteorite"
     solrLiterals("file_accessible_to") shouldBe "RESTRICTED_GROUP"
     solrLiterals("file_mime_type") shouldBe "video/mpeg"
     solrLiterals("file_checksum") shouldBe "1dd40013ce63dfa98dfe19f5b4bbf811ee2240f7"

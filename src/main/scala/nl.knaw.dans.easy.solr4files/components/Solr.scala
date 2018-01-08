@@ -37,18 +37,19 @@ import scala.util.{ Failure, Success, Try }
 
 trait Solr extends DebugEnhancedLogging {
   val solrUrl: URL
+  val maxFileSizeToExtractContentFrom: Double
   lazy val solrClient: SolrClient = new HttpSolrClient.Builder(solrUrl.toString).build()
 
   def createDoc(item: FileItem): Try[FileFeedback] = {
     item.bag.fileUrl(item.path).flatMap { fileUrl =>
       val solrDocId = s"${ item.bag.bagId }/${ item.path }"
-      val solrFields = (item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals :+ "file_size" -> item.size.toString)
+      val solrFields = (item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals)
         .filter { case (_, v) => v.nonEmpty }
       if (logger.underlying.isDebugEnabled) logger.debug(solrFields
         .map { case (key, value) => s"$key = $value" }
         .mkString("\n\t")
       )
-      if (!item.shouldSubmitWithContent) {
+      if (item.size > maxFileSizeToExtractContentFrom) {
         logger.info(s"Submission without content of [$solrDocId]")
         submitWithOnlyMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
       }

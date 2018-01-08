@@ -49,20 +49,16 @@ case class FileItem(bag: Bag, ddm: DDM, xml: Node) extends DebugEnhancedLogging 
 
   lazy val size: Long = bag.fileSize(path)
 
-  val shouldSubmitWithContent: Boolean = {
-    // prevent content submission and extraction for large files, to keep it fast
-    // TODO make this value configurable
-    val maxFileSizeToExtractContentFrom = 64*1024*1024
-    size <= maxFileSizeToExtractContentFrom
-  }
-
   val mimeType: String = (xml \ "format").text
+  val title: String = (xml \ "title").text
 
   // lazy postpones loading Bag.sha's
   lazy val solrLiterals: SolrLiterals = Seq(
     ("file_path", path),
+    ("file_title", title),
     ("file_checksum", bag.sha(path)),
     ("file_mime_type", mimeType),
+    ("file_size", size.toString),
     ("file_accessible_to", accessibleTo)
   )
 }
