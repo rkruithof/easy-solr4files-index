@@ -168,23 +168,15 @@ package object solr4files extends DebugEnhancedLogging {
         Try(new File(left.getPath).length)
       else {
         Try(Http(left.toString).method("HEAD").asString).flatMap {
-          case response if response.isSuccess => Try(response.headers("content-length").toLong)
-          case response => Failure(HttpStatusException(s"getSize($left)", response))
+          case response if response.isSuccess =>
+            response.headers("content-length").headOption
+              .map(cl => Success(cl.toLong))
+              .getOrElse(Failure(HttpStatusException(s"no content-length header found in response of $left", response)))
+          case response => Failure(HttpStatusException(s"getContentLength($left)", response))
         }
       }
     }.doIfFailure { case e => logger.warn(e.getMessage, e) }
       .getOrElse(-1L)
-  }
-
-  implicit class TryExtensions2[T](val t: Try[T]) extends AnyVal {
-    // copied from easy-bag-store
-    // TODO candidate for dans-scala-lib
-    def unsafeGetOrThrow: T = {
-      t match {
-        case Success(value) => value
-        case Failure(throwable) => throw throwable
-      }
-    }
   }
 }
 

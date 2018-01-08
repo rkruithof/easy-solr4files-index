@@ -63,19 +63,19 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
     val result = getUUID
       .map(uuid => respond(app.update(params("store"), uuid).map(_.msg)))
       .getOrRecover(badUuid)
-    logger.info(s"update returned ${ response.status.line } for $params")
+    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
     result
   }
 
   post("/init") {
     val result = respond(app.initAllStores())
-    logger.info(s"update returned ${ response.status.line } for $params")
+    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
     result
   }
 
   post("/init/:store") {
     val result = respond(app.initSingleStore(params("store")).map(_.msg))
-    logger.info(s"update returned ${ response.status.line } for $params")
+    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
     result
   }
 
@@ -83,13 +83,13 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
     val result = getUUID
       .map(uuid => respond(app.delete(s"easy_dataset_id:$uuid")))
       .getOrRecover(badUuid)
-    logger.info(s"update returned ${ response.status.line } for $params")
+    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
     result
   }
 
   delete("/:store") {
     val result = respond(app.delete(s"easy_dataset_store_id:${ params("store") }"))
-    logger.info(s"update returned ${ response.status.line } for $params")
+    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
     result
   }
 
@@ -97,7 +97,7 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
     val result = params.get("q")
       .map(q => respond(app.delete(q)))
       .getOrElse(BadRequest("delete requires param 'q', got " + params.asString))
-    logger.info(s"update returned ${ response.status.line } for $params")
+    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
     result
   }
 }

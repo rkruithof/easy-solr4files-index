@@ -20,7 +20,7 @@
     <parent>
         <groupId>nl.knaw.dans.shared</groupId>
         <artifactId>dans-scala-prototype</artifactId>
-        <version>1.62</version>
+        <version>1.64</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>nl.knaw.dans.easy</groupId>
@@ -44,15 +44,15 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
+            <artifactId>scalatest_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scalamock</groupId>
-            <artifactId>scalamock-scalatest-support_2.11</artifactId>
+            <artifactId>scalamock-scalatest-support_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.rogach</groupId>
-            <artifactId>scallop_2.11</artifactId>
+            <artifactId>scallop_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-configuration</groupId>
@@ -60,24 +60,23 @@
         </dependency>
         <dependency>
             <groupId>nl.knaw.dans.lib</groupId>
-            <artifactId>dans-scala-lib</artifactId>
-            <version>1.3</version>
+            <artifactId>dans-scala-lib_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-native_2.11</artifactId>
+            <artifactId>json4s-native_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scalaj</groupId>
-            <artifactId>scalaj-http_2.11</artifactId>
+            <artifactId>scalaj-http_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-xml_2.11</artifactId>
+            <artifactId>scala-xml_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jsuereth</groupId>
-            <artifactId>scala-arm_2.11</artifactId>
+            <artifactId>scala-arm_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -93,13 +92,11 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra_2.11</artifactId>
+            <artifactId>scalatra_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalatest_2.11</artifactId>
-            <version>2.3.0</version>
-            <scope>test</scope>
+            <artifactId>scalatra-scalatest_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -108,12 +105,11 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalate_2.11</artifactId>
+            <artifactId>scalatra-scalate_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-auth_2.11</artifactId>
-            <version>2.5.3</version>
+            <artifactId>scalatra-auth_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -124,9 +120,21 @@
             <artifactId>commons-daemon</artifactId>
         </dependency>
         <dependency>
+            <!--
+            TODO move dependency to dans-prototype once the other SOLR is upgraded from v3 to v6
+            currently this gives too many problems in the inheritance to easy-app/easy-webui
+            -->
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>6.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.joda</groupId>
+            <artifactId>joda-convert</artifactId>
         </dependency>
     </dependencies>
     <repositories>
