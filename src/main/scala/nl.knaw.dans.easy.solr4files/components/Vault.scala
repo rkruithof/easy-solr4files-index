@@ -51,7 +51,7 @@ trait Vault extends DebugEnhancedLogging {
   }
 
   def fileURL(storeName: String, bagId: UUID, file: String): Try[URL] = Try {
-    val f = URLEncoder.encode(file, "UTF8")
+    val f = escapePath(Paths.get(file))
     vaultBaseUri.resolve(s"stores/$storeName/bags/$bagId/$f").toURL
   }
 }
