@@ -36,9 +36,8 @@ import scala.language.postfixOps
 import scala.util.{ Failure, Success, Try }
 
 trait Solr extends DebugEnhancedLogging {
-  val solrUrl: URL
   val maxFileSizeToExtractContentFrom: Double
-  lazy val solrClient: SolrClient = new HttpSolrClient.Builder(solrUrl.toString).build()
+  val solrClient: SolrClient
 
   def createDoc(item: FileItem): Try[FileFeedback] = {
     item.bag.fileUrl(item.path).flatMap { fileUrl =>

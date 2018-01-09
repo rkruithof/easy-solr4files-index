@@ -29,10 +29,7 @@ class UpdateServletSpec extends TestSupportFixture
   with ScalatraSuite
   with MockFactory {
 
-  private class App extends EasySolr4filesIndexApp() {
-    override lazy val configuration: Configuration = configWithMockedVault
-  }
-  private val app = mock[EasySolr4filesIndexApp]
+  private val app = mock[TestApp]
   addServlet(new UpdateServlet(app), "/*")
 
   private val uuid = UUID.randomUUID()

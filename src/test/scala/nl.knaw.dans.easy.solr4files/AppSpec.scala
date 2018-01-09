@@ -25,32 +25,29 @@ import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.common.util.NamedList
 
 import scala.collection.JavaConverters._
-import scala.util.{ Failure, Success }
+import scala.util.{ Failure, Success, Try }
 
 class AppSpec extends TestSupportFixture {
 
-  private val store = "pdbs"
+  private val storeName = "pdbs"
 
-  private class MockedAndStubbedApp extends EasySolr4filesIndexApp() {
-    override lazy val configuration: Configuration = configWithMockedVault
-    override lazy val solrClient: SolrClient = new SolrClient() {
-      // can't use mock because SolrClient has a final method
+  private val stubbedSolr = new SolrClient() {
+    // can't use mock because SolrClient has a final method
 
-      override def deleteByQuery(q: String): UpdateResponse = new UpdateResponse
+    override def deleteByQuery(q: String): UpdateResponse = new UpdateResponse
 
-      override def commit(): UpdateResponse = new UpdateResponse
+    override def commit(): UpdateResponse = new UpdateResponse
 
-      override def add(doc: SolrInputDocument): UpdateResponse = new UpdateResponse {
-        override def getStatus = 200
-      }
+    override def add(doc: SolrInputDocument): UpdateResponse = new UpdateResponse {
+      override def getStatus = 200
+    }
 
-      override def close(): Unit = ()
+    override def close(): Unit = ()
 
-      override def request(solrRequest: SolrRequest[_ <: SolrResponse], s: String): NamedList[AnyRef] = {
-        new NamedList[AnyRef]() {
-          // non-zero status (or an Exception) provokes a retry without content
-          add("status", nrOfImageStreams(solrRequest).toString)
-        }
+    override def request(solrRequest: SolrRequest[_ <: SolrResponse], s: String): NamedList[AnyRef] = {
+      new NamedList[AnyRef]() {
+        // non-zero status (or an Exception) provokes a retry without content
+        add("status", nrOfImageStreams(solrRequest).toString)
       }
     }
   }
@@ -73,7 +70,9 @@ class AppSpec extends TestSupportFixture {
   "update" should "call the stubbed solrClient.request" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val result = new MockedAndStubbedApp().update(store, uuidCentaur)
+    val result = new TestApp() {
+      override val solrClient: SolrClient = stubbedSolr
+    }.update(storeName, uuidCentaur)
     inside(result) { case Success(feedback) =>
       feedback.toString shouldBe s"Bag ${ uuidCentaur }: 7 times FileSubmittedWithContent, 2 times FileSubmittedWithOnlyMetadata"
     }
@@ -82,14 +81,18 @@ class AppSpec extends TestSupportFixture {
   it should "not stumble on difficult file names" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val result = new MockedAndStubbedApp().update(store, uuidAnonymized)
+    val result = new TestApp() {
+      override val solrClient: SolrClient = stubbedSolr
+    }.update(storeName, uuidAnonymized)
     inside(result) { case Success(feedback) =>
       feedback.toString shouldBe s"Bag ${ uuidAnonymized }: 3 times FileSubmittedWithContent"
     }
   }
 
   "delete" should "call the stubbed solrClient.deleteByQuery" in {
-    val result = new MockedAndStubbedApp().delete("*:*")
+    val result = new TestApp() {
+      override val solrClient: SolrClient = stubbedSolr
+    }.delete("*:*")
     inside(result) { case Success(msg) =>
       msg shouldBe s"Deleted documents with query *:*"
     }
@@ -104,13 +107,14 @@ class AppSpec extends TestSupportFixture {
         |    f70c19a5-0725-4950-aa42-6489a9d73806
         |    6ccadbad-650c-47ec-936d-2ef42e5f3cda""".stripMargin
     )
-    val result = new EasySolr4filesIndexApp {
-      override lazy val configuration: Configuration = configWithMockedVault
+    val result = new TestApp() {
+      override val solrClient: SolrClient = stubbedSolr
 
       // vaultBagIds/bags can't be a file and directory so we need a stub, a failure demonstrates it's called
-      override def update(store: String, uuid: UUID) =
+      override def update(store: String, uuid: UUID): Try[BagSubmitted] = {
         Failure(new Exception("stubbed ApplicationWiring.update"))
-    }.initSingleStore(store)
+      }
+    }.initSingleStore(storeName)
 
     inside(result) { case Failure(e) => e should have message "stubbed ApplicationWiring.update" }
   }
@@ -123,13 +127,15 @@ class AppSpec extends TestSupportFixture {
         |    <http://localhost:20110/stores/rabarbera>
         |    <http://localhost:20110/stores/barbapapa>""".stripMargin
     )
-    val result = new EasySolr4filesIndexApp {
-      override lazy val configuration: Configuration = configWithMockedVault
+    val result = new TestApp() {
+      override val solrClient: SolrClient = stubbedSolr
 
       // vaultStoreNames/stores can't be a file and directory so we need a stub, a failure demonstrates it's called
-      override def initSingleStore(store: String) = Failure(new Exception("stubbed ApplicationWiring.initSingleStore"))
-    }.initAllStores()
+      override def initSingleStore(storeName: String): Try[StoreSubmitted] = {
+        Failure(new Exception("stubbed ApplicationWiring.initSingleStore"))
+      }
 
+    }.initAllStores()
     inside(result) { case Failure(e) => e should have message "stubbed ApplicationWiring.initSingleStore" }
   }
 }
