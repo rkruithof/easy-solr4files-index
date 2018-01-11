@@ -31,23 +31,25 @@ class AppSpec extends TestSupportFixture {
 
   private val storeName = "pdbs"
 
-  private val stubbedSolr = new SolrClient() {
-    // can't use mock because SolrClient has a final method
+  private class StubbedSolrApp() extends TestApp {
+    override val solrClient: SolrClient = new SolrClient() {
+      // can't use mock because SolrClient has a final method
 
-    override def deleteByQuery(q: String): UpdateResponse = new UpdateResponse
+      override def deleteByQuery(q: String): UpdateResponse = new UpdateResponse
 
-    override def commit(): UpdateResponse = new UpdateResponse
+      override def commit(): UpdateResponse = new UpdateResponse
 
-    override def add(doc: SolrInputDocument): UpdateResponse = new UpdateResponse {
-      override def getStatus = 200
-    }
+      override def add(doc: SolrInputDocument): UpdateResponse = new UpdateResponse {
+        override def getStatus = 200
+      }
 
-    override def close(): Unit = ()
+      override def close(): Unit = ()
 
-    override def request(solrRequest: SolrRequest[_ <: SolrResponse], s: String): NamedList[AnyRef] = {
-      new NamedList[AnyRef]() {
-        // non-zero status (or an Exception) provokes a retry without content
-        add("status", nrOfImageStreams(solrRequest).toString)
+      override def request(solrRequest: SolrRequest[_ <: SolrResponse], s: String): NamedList[AnyRef] = {
+        new NamedList[AnyRef]() {
+          // non-zero status (or an Exception) provokes a retry without content
+          add("status", nrOfImageStreams(solrRequest).toString)
+        }
       }
     }
   }
@@ -70,9 +72,7 @@ class AppSpec extends TestSupportFixture {
   "update" should "call the stubbed solrClient.request" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val result = new TestApp() {
-      override val solrClient: SolrClient = stubbedSolr
-    }.update(storeName, uuidCentaur)
+    val result = new StubbedSolrApp().update(storeName, uuidCentaur)
     inside(result) { case Success(feedback) =>
       feedback.toString shouldBe s"Bag ${ uuidCentaur }: 7 times FileSubmittedWithContent, 2 times FileSubmittedWithOnlyMetadata"
     }
@@ -81,18 +81,14 @@ class AppSpec extends TestSupportFixture {
   it should "not stumble on difficult file names" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val result = new TestApp() {
-      override val solrClient: SolrClient = stubbedSolr
-    }.update(storeName, uuidAnonymized)
+    val result = new StubbedSolrApp().update(storeName, uuidAnonymized)
     inside(result) { case Success(feedback) =>
       feedback.toString shouldBe s"Bag ${ uuidAnonymized }: 3 times FileSubmittedWithContent"
     }
   }
 
   "delete" should "call the stubbed solrClient.deleteByQuery" in {
-    val result = new TestApp() {
-      override val solrClient: SolrClient = stubbedSolr
-    }.delete("*:*")
+    val result = new StubbedSolrApp().delete("*:*")
     inside(result) { case Success(msg) =>
       msg shouldBe s"Deleted documents with query *:*"
     }
@@ -107,9 +103,7 @@ class AppSpec extends TestSupportFixture {
         |    f70c19a5-0725-4950-aa42-6489a9d73806
         |    6ccadbad-650c-47ec-936d-2ef42e5f3cda""".stripMargin
     )
-    val result = new TestApp() {
-      override val solrClient: SolrClient = stubbedSolr
-
+    val result = new StubbedSolrApp() {
       // vaultBagIds/bags can't be a file and directory so we need a stub, a failure demonstrates it's called
       override def update(store: String, uuid: UUID): Try[BagSubmitted] = {
         Failure(new Exception("stubbed ApplicationWiring.update"))
@@ -127,8 +121,7 @@ class AppSpec extends TestSupportFixture {
         |    <http://localhost:20110/stores/rabarbera>
         |    <http://localhost:20110/stores/barbapapa>""".stripMargin
     )
-    val result = new TestApp() {
-      override val solrClient: SolrClient = stubbedSolr
+    val result = new StubbedSolrApp() {
 
       // vaultStoreNames/stores can't be a file and directory so we need a stub, a failure demonstrates it's called
       override def initSingleStore(storeName: String): Try[StoreSubmitted] = {
