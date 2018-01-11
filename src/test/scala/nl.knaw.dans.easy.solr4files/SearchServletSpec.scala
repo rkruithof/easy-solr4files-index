@@ -31,10 +31,8 @@ class SearchServletSpec extends TestSupportFixture
   with ScalatraSuite
   with MockFactory {
 
-  private class StubbedApp extends EasySolr4filesIndexApp() {
-    override lazy val configuration: Configuration = configWithMockedVault
-
-    override lazy val solrClient: SolrClient = new SolrClient() {
+  private val testApp = new TestApp() {
+    override val solrClient: SolrClient = new SolrClient() {
       // can't use mock because SolrClient has a final method
 
       override def query(params: SolrParams): QueryResponse = mockQueryResponse(params)
@@ -69,7 +67,7 @@ class SearchServletSpec extends TestSupportFixture
     }
   }
 
-  addServlet(new SearchServlet(new StubbedApp), "/*")
+  addServlet(new SearchServlet(testApp), "/*")
 
   "get /" should "translate to searching with *:* and the default parser" in {
     get("/?q=foo+bar") { // q is ignored as it is an unknown argument

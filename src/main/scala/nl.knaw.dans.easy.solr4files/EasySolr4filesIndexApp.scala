@@ -15,11 +15,15 @@
  */
 package nl.knaw.dans.easy.solr4files
 
+import java.net.{ URI, URL }
 import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files.components.{ Bag, DDM, FileItem, User }
 import nl.knaw.dans.lib.error.{ CompositeException, _ }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.solr.client.solrj.SolrClient
+import org.apache.solr.client.solrj.impl.HttpSolrClient
 import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 
 import scala.util.{ Failure, Success, Try }
@@ -106,7 +110,7 @@ trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
    * Files submitted with content are logged as info
    * if and when another file in the same bag failed.
    */
-  private def updateFiles(bag: Bag, ddm: DDM, filesXML: Elem): Try[BagSubmitted] = {
+  def updateFiles(bag: Bag, ddm: DDM, filesXML: Elem): Try[BagSubmitted] = {
     (filesXML \ "file")
       .map(FileItem(bag, ddm, _))
       .filter(_.shouldIndex)
@@ -132,7 +136,18 @@ trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
 
 object EasySolr4filesIndexApp {
 
-  def apply(conf: Configuration): EasySolr4filesIndexApp = new EasySolr4filesIndexApp {
-    override lazy val configuration: Configuration = conf
+  def apply(configuration: Configuration): EasySolr4filesIndexApp = new EasySolr4filesIndexApp {
+    private val properties: PropertiesConfiguration = Option(configuration).map(_.properties).getOrElse(new PropertiesConfiguration())
+
+    override val authentication: Authentication = new Authentication {
+      override val ldapUsersEntry: String = properties.getString("ldap.users-entry")
+      override val ldapProviderUrl: String = properties.getString("ldap.provider.url")
+    }
+
+    // don't need resolve for solr, URL gives more early errors TODO perhaps not yet at service startup once implemented
+    private val solrUrl: URL = new URL(properties.getString("solr.url", "http://localhost"))
+    override val solrClient: SolrClient = new HttpSolrClient.Builder(solrUrl.toString).build()
+    override val vaultBaseUri: URI = new URI(properties.getString("vault.url", "http://localhost"))
+    override val maxFileSizeToExtractContentFrom: Double = properties.getString("max-fileSize-toExtract-content-from", (64 * 1024 * 1024).toString).toDouble
   }
 }
