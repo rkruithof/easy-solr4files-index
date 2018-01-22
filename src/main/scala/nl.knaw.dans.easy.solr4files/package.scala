@@ -27,8 +27,8 @@ import org.apache.solr.common.util.NamedList
 import org.scalatra
 
 import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.util.{ Failure, Success, Try }
 import scala.xml.{ Elem, Node, XML }
 import scalaj.http.{ Http, HttpResponse }
@@ -48,6 +48,12 @@ package object solr4files extends DebugEnhancedLogging {
 
   case class HttpStatusException(msg: String, response: HttpResponse[String])
     extends Exception(s"$msg - ${ response.statusLine }, details: ${ response.body }")
+
+  implicit class RichString(val s: String) extends AnyVal {
+
+    // TODO candidate for dans-scala-lib
+    def toOneLiner: String = s.split("\n").map(_.trim).mkString(" ")
+  }
 
   case class InvalidUserPasswordException(userName: String, cause: Throwable)
     extends Exception(s"invalid credentials for $userName") {

@@ -16,60 +16,27 @@
 package nl.knaw.dans.easy.solr4files.components
 
 import nl.knaw.dans.easy.solr4files.SolrLiterals
-import nl.knaw.dans.easy.solr4files.components.FileItem._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.xml.Node
 
-case class FileItem(bag: Bag, ddm: DDM, xml: Node) extends DebugEnhancedLogging {
+case class FileItem(bag: Bag, xml: Node, authInfoItem: AuthorisationItem) extends DebugEnhancedLogging {
 
-  // see ddm.xsd EasyAccessCategoryType
-  private def datasetAccessibleTo = ddm.accessRights match {
-    // @formatter:off
-    case "OPEN_ACCESS"                      => anonymous
-    case "OPEN_ACCESS_FOR_REGISTERED_USERS" => known
-    case "GROUP_ACCESS"                     => restrictedGroup
-    case "REQUEST_PERMISSION"               => restrictedRequest
-    case "NO_ACCESS"                        => none
-    case _                                  => none
-    // @formatter:off
-  }
-
-  val path: String = xml.attribute("filepath").map(_.text).getOrElse("")
-  val accessibleTo: String = ( xml \ "accessibleToRights").map(_.text).mkString.trim match {
-      // TODO use module easy-auth-info / if not found it looks for <dcterms:AccessRights>
-    case "" => datasetAccessibleTo
-    case s => s
-  }
-  val shouldIndex: Boolean = {
-    // without a path we can't create a solrID nor fetch the content
-    // multiple or otherwise garbage access rights is treated as "NONE": don't index
-    path.nonEmpty && accessible.contains(accessibleTo)
-  }
+  //strip the UUID from the itemId including the first slash
+  val path: String = authInfoItem.itemId.replaceAll("^[^/]+/", "")
 
   lazy val size: Long = bag.fileSize(path)
-
-  val mimeType: String = (xml \ "format").text
-  val title: String = (xml \ "title").text
 
   // lazy postpones loading Bag.sha's
   lazy val solrLiterals: SolrLiterals = Seq(
     ("file_path", path),
-    ("file_title", title),
+    ("file_title", (xml \ "title").text),
     ("file_checksum", bag.sha(path)),
-    ("file_mime_type", mimeType),
+    ("file_mime_type", (xml \ "format").text),
     ("file_size", size.toString),
-    ("file_accessible_to", accessibleTo)
+    ("file_accessible_to", authInfoItem.accessibleTo.toString),
+    ("dataset_depositor_id", authInfoItem.owner),
+    ("dataset_id", bag.bagId.toString),
+    ("dataset_store_id", bag.storeName)
   )
-}
-
-object FileItem {
-  private val anonymous = "ANONYMOUS"
-  private val known = "KNOWN"
-  private val restrictedGroup = "RESTRICTED_GROUP"
-  private val restrictedRequest = "RESTRICTED_REQUEST"
-  private val none = "NONE"
-
-  /** all above but none */
-  private val accessible = Set (anonymous, known, restrictedGroup, restrictedRequest)
 }

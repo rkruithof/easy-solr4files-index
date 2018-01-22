@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
-import java.net.{ URI, URL, URLEncoder }
+import java.net.{ URI, URL }
 import java.nio.file.Paths
 import java.util.UUID
 

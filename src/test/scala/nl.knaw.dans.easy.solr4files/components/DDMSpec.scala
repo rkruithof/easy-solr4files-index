@@ -25,7 +25,6 @@ class DDMSpec extends TestSupportFixture {
     val xml = mockedVault.fileURL("pdbs", uuidCentaur, "metadata/dataset.xml").flatMap(_.loadXml).getOrElse(<ddm/>)
 
     val ddm = new DDM(xml)
-    ddm.accessRights shouldBe "OPEN_ACCESS"
     val literals: Seq[(String, String)] = ddm.solrLiterals
       .map { case (k, v) => (k, v.replaceAll("\\s+", " ").trim) }
       .filter { case (_, v) => !v.isEmpty }

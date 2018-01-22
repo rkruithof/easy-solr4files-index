@@ -16,64 +16,48 @@
 package nl.knaw.dans.easy.solr4files.components
 
 import nl.knaw.dans.easy.solr4files.TestSupportFixture
+import nl.knaw.dans.easy.solr4files.components.RightsFor.RESTRICTED_GROUP
+import org.joda.time.DateTime
 
 class FileItemSpec extends TestSupportFixture {
 
-  private val centaurBag = Bag("pdbs", uuidCentaur, mockedVault)
+  class MockedBag extends Bag("pdbs", uuid, mock[Vault])
+  private val mockedBag = mock[MockedBag]
 
-  "solrLiteral" should "return proper values" in {
-    initVault()
-    val xml = <file filepath="data/reisverslag/centaur.mpg">
+  private def bagExpects(filePath: String, fileSha: String, fileSize: Int) = {
+    (mockedBag.sha(_: String)) expects filePath once() returning fileSha
+    (mockedBag.fileSize(_: String)) expects filePath once() returning fileSize
+  }
+
+  "solrLiterals" should "return proper values" in {
+    val filePath = "data/reisverslag/centaur.mpg"
+    val fileSha = "1dd40013ce63dfa98dfe19f5b4bbf811ee2240f7"
+    val fileSize = 123
+    bagExpects(filePath, fileSha, fileSize)
+
+    val xml = <file filepath={filePath}>
       <dcterms:type>http://schema.org/VideoObject</dcterms:type>
       <dcterms:format>video/mpeg</dcterms:format>
       <dcterms:title>video about the centaur meteorite</dcterms:title>
-      <accessibleToRights>RESTRICTED_GROUP</accessibleToRights>
       <dcterms:relation xml:lang="en">data/reisverslag/centaur.srt</dcterms:relation>
       <dcterms:relation xml:lang="nl">data/reisverslag/centaur-nederlands.srt</dcterms:relation>
     </file>
-
-    val fi = FileItem(centaurBag, ddm("OPEN_ACCESS"), xml)
-    fi.mimeType shouldBe "video/mpeg"
-    fi.path shouldBe "data/reisverslag/centaur.mpg"
-
-    val solrLiterals = fi.solrLiterals.toMap
-    solrLiterals("file_path") shouldBe fi.path
-    solrLiterals("file_size") shouldBe "0"
+    val authInfoItem = AuthorisationItem(
+      itemId = s"$uuid/$filePath",
+      owner = "someone",
+      dateAvailable = DateTime.now,
+      accessibleTo = RESTRICTED_GROUP,
+      visibleTo = RESTRICTED_GROUP
+    )
+    val solrLiterals = FileItem(mockedBag, xml, authInfoItem).solrLiterals.toMap
+    solrLiterals("file_path") shouldBe filePath
+    solrLiterals("file_size") shouldBe s"$fileSize"
     solrLiterals("file_title") shouldBe "video about the centaur meteorite"
     solrLiterals("file_accessible_to") shouldBe "RESTRICTED_GROUP"
     solrLiterals("file_mime_type") shouldBe "video/mpeg"
-    solrLiterals("file_checksum") shouldBe "1dd40013ce63dfa98dfe19f5b4bbf811ee2240f7"
+    solrLiterals("file_checksum") shouldBe fileSha
+    solrLiterals("dataset_id") shouldBe uuid.toString // from auth-info
+    solrLiterals("dataset_depositor_id") shouldBe "someone" // from auth-info
+    solrLiterals("dataset_store_id") shouldBe "pdbs" // from the bag
   }
-
-  it should "use the dataset rights as default" in {
-    val solrLiterals = FileItem(centaurBag, ddm("OPEN_ACCESS"), <file filepath="p"/>)
-      .solrLiterals.toMap
-    solrLiterals("file_accessible_to") shouldBe "ANONYMOUS"
-  }
-
-  it should "also use the dataset rights as default" in {
-    val item = FileItem(centaurBag, ddm("OPEN_ACCESS_FOR_REGISTERED_USERS"), <file filepath="p"/>)
-    val solrLiterals = item.solrLiterals.toMap
-    solrLiterals("file_accessible_to") shouldBe "KNOWN"
-  }
-
-  it should "not have read the lazy files in case of accessible to none" ignore { // TODO
-    val item = FileItem(centaurBag, ddm("NO_ACCESS"), <file filepath="p"/>)
-
-    // The bag.sha's and ddm.vocabularies are private
-    // so we need side effects, not something like https://stackoverflow.com/questions/1651927/how-to-unit-test-for-laziness
-    // we could mock the vault.fileURL for this test
-    // throwing an error when called for the sha's
-    // remains checking for the vocabularies in DDM
-  }
-
-  private def ddm(datasetAccessRights: String) = new DDM(
-    <ddm:DDM xsi:schemaLocation="http://easy.dans.knaw.nl/schemas/md/ddm/ https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"
-             xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/">
-      <ddm:profile>
-        <ddm:accessRights>{datasetAccessRights}</ddm:accessRights>
-        <ddm:creatorDetails></ddm:creatorDetails>
-      </ddm:profile>
-    </ddm:DDM>
-  )
 }

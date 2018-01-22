@@ -33,8 +33,6 @@ class DDM(xml: Node) extends DebugEnhancedLogging {
   private val profile: NodeSeq = xml \ "profile"
   private val dcmiMetadata: NodeSeq = xml \ "dcmiMetadata"
 
-  val accessRights: String = (profile \ "accessRights").text
-
   // lazy postpones loading vocabularies until a file without accessibleTo=none is found
   // all the xpath handling might be expensive too
   lazy val solrLiterals: SolrLiterals = Seq.empty ++ // empty for code formatting

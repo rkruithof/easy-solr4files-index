@@ -32,8 +32,6 @@ class UpdateServletSpec extends TestSupportFixture
   private val app = mock[TestApp]
   addServlet(new UpdateServlet(app), "/*")
 
-  private val uuid = UUID.randomUUID()
-
   "get /" should "return the message that the service is running" in {
     get("/") {
       body shouldBe "EASY File Index is running."

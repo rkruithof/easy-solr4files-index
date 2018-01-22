@@ -14,13 +14,23 @@
 # limitations under the License.
 #
 
-- src: https://github.com/DANS-KNAW/dans.local-yum-repo
-  version: v3.1.1
-- src: https://github.com/DANS-KNAW/dans.local-test-vm-base
-  version: v3.0.0
-- src: https://github.com/DANS-KNAW/dans.solr
-  version: 3.6.3-dans
-- src: https://github.com/DANS-KNAW/dans.easy-ldap-dir
-  version: v3.0.0
-- src: https://github.com/DANS-KNAW/dans.easy-test-users
-  version: v2.0.0
+- name: Configure bag stores
+  lineinfile:
+      dest: "{{ dans_config_base }}/easy-bag-store/stores.properties"
+      line: "{{ item.name }}={{ item.base_dir }}"
+  with_items: "{{ bag_stores }}"
+
+- name: Create empty bag-store base directories
+  file:
+    path: "{{ stores_dir }}/{{ item.name }}"
+    state: "directory"
+    owner: "easy-bag-store"
+    group: "easy-bag-store"
+    mode: "0775"
+  with_items: "{{ bag_stores }}"
+
+- name: Create link to test data
+  file:
+    src: /vagrant/src/test/resources/vault/stores/pdbs/bags
+    dest: /home/vagrant/test-data
+    state: link

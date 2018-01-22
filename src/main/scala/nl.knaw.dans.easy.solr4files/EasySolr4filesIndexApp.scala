@@ -15,19 +15,16 @@
  */
 package nl.knaw.dans.easy.solr4files
 
-import java.net.{ URI, URL }
+import java.nio.file.Paths
 import java.util.UUID
 
-import nl.knaw.dans.easy.solr4files.components.{ Bag, DDM, FileItem, User }
+import nl.knaw.dans.easy.solr4files.components._
 import nl.knaw.dans.lib.error.{ CompositeException, _ }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.commons.configuration.PropertiesConfiguration
-import org.apache.solr.client.solrj.SolrClient
-import org.apache.solr.client.solrj.impl.HttpSolrClient
 import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 
 import scala.util.{ Failure, Success, Try }
-import scala.xml.Elem
+import scala.xml.{ Elem, Node }
 
 trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
   with DebugEnhancedLogging {
@@ -112,16 +109,35 @@ trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
    */
   def updateFiles(bag: Bag, ddm: DDM, filesXML: Elem): Try[BagSubmitted] = {
     (filesXML \ "file")
-      .map(FileItem(bag, ddm, _))
-      .filter(_.shouldIndex)
-      .toStream
-      .map(f => createDoc(f))
+      .toStream // prevent execution beyond the first failure
+      .flatMap(getFileItem(bag, _).toSeq) // skip the None's and unwrap the Some's
+      .map(_.flatMap(createDoc(_, ddm))) // createDoc if getFileItem did not fail
       .takeUntilFailure
-      .doIfFailure { case MixedResultsException(results: Seq[_], _) => results.foreach(fb => logger.info(fb.toString)) }
+      .doIfFailure { case MixedResultsException(results: Seq[_], _) =>
+        results.foreach(fileFeedBack => logger.info(fileFeedBack.toString))
+      }
       .map(results => BagSubmitted(bag.bagId.toString, results))
   }
 
-  def authenticate(authRequest: BasicAuthRequest): Try[Option[User]] = authentication.authenticate(authRequest)
+  private def getFileItem(bag: Bag, fileNode: Node): Option[Try[FileItem]] = {
+    getAccessibleAuthInfo(bag.bagId, fileNode) match {
+      case None => Some(Failure(new Exception(s"invalid files.xml for ${ bag.bagId }: filepath attribute is missing in ${ fileNode.toString().toOneLiner }")))
+      case Some(Failure(t)) => Some(Failure(t))
+      case Some(Success(authInfoItem)) if !authInfoItem.isAccessible => None
+      case Some(Success(authInfoItem)) => Some(Success(FileItem(bag, fileNode, authInfoItem)))
+    }
+  }
+
+  private def getAccessibleAuthInfo(bagID: UUID, fileNode: Node): Option[Try[AuthorisationItem]] = {
+    fileNode
+      .attribute("filepath")
+      .map(attribute => authorisation.getAuthInfoItem(bagID, Paths.get(attribute.text))
+      )
+  }
+
+  def authenticate(authRequest: BasicAuthRequest): Try[Option[User]] = {
+    authentication.authenticate(authRequest)
+  }
 
   def init(): Try[Unit] = {
     // Do any initialization of the application here. Typical examples are opening
@@ -136,18 +152,7 @@ trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
 
 object EasySolr4filesIndexApp {
 
-  def apply(configuration: Configuration): EasySolr4filesIndexApp = new EasySolr4filesIndexApp {
-    private val properties: PropertiesConfiguration = Option(configuration).map(_.properties).getOrElse(new PropertiesConfiguration())
-
-    override val authentication: Authentication = new Authentication {
-      override val ldapUsersEntry: String = properties.getString("ldap.users-entry")
-      override val ldapProviderUrl: String = properties.getString("ldap.provider.url")
-    }
-
-    // don't need resolve for solr, URL gives more early errors TODO perhaps not yet at service startup once implemented
-    private val solrUrl: URL = new URL(properties.getString("solr.url", "http://localhost"))
-    override val solrClient: SolrClient = new HttpSolrClient.Builder(solrUrl.toString).build()
-    override val vaultBaseUri: URI = new URI(properties.getString("vault.url", "http://localhost"))
-    override val maxFileSizeToExtractContentFrom: Double = properties.getString("max-fileSize-toExtract-content-from", (64 * 1024 * 1024).toString).toDouble
+  def apply(conf: Configuration): EasySolr4filesIndexApp = new EasySolr4filesIndexApp {
+    override lazy val configuration: Configuration = conf
   }
 }

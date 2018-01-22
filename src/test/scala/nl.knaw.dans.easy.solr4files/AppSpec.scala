@@ -17,7 +17,9 @@ package nl.knaw.dans.easy.solr4files
 
 import java.util.UUID
 
+import nl.knaw.dans.easy.solr4files.components._
 import org.apache.commons.io.FileUtils.write
+import org.apache.http.HttpStatus._
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest
 import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.client.solrj.{ SolrClient, SolrRequest, SolrResponse }
@@ -26,10 +28,14 @@ import org.apache.solr.common.util.NamedList
 
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
+import scalaj.http.HttpResponse
 
 class AppSpec extends TestSupportFixture {
 
   private val storeName = "pdbs"
+
+  private class EmptyDDM extends DDM(<empty/>)
+  private val mockedDDM: DDM = mock[EmptyDDM]
 
   private class StubbedSolrApp() extends TestApp {
     override val solrClient: SolrClient = new SolrClient() {
@@ -69,22 +75,109 @@ class AppSpec extends TestSupportFixture {
     }
   }
 
+  private def anonymousAuthItem(uuid: UUID, path: String) = Success(
+    s"""{
+       |  "itemId":"$uuid/$path",
+       |  "owner":"someone",
+       |  "dateAvailable":"1992-07-30",
+       |  "accessibleTo":"ANONYMOUS",
+       |  "visibleTo":"ANONYMOUS"
+       |}""".stripMargin)
+
   "update" should "call the stubbed solrClient.request" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val result = new StubbedSolrApp().update(storeName, uuidCentaur)
+    val app = new StubbedSolrApp()
+    Seq(
+      "data/path/to/a/random/video/hubble.mpg",
+      "data/reisverslag/centaur.mpg",
+      "data/reisverslag/centaur.srt",
+      "data/reisverslag/centaur-nederlands.srt",
+      "data/reisverslag/deel01.docx",
+      "data/reisverslag/deel01.txt",
+      "data/reisverslag/deel02.txt",
+      "data/reisverslag/deel03.txt",
+      "data/ruimtereis01_verklaring.txt"
+    ).foreach(f => app.expectsHttpAsString(anonymousAuthItem(uuidCentaur, f)) once())
+
+    val result = app.update(storeName, uuidCentaur)
     inside(result) { case Success(feedback) =>
       feedback.toString shouldBe s"Bag ${ uuidCentaur }: 7 times FileSubmittedWithContent, 2 times FileSubmittedWithOnlyMetadata"
+    }
+  }
+
+  it should "report problems when easy-auth-info is down" in {
+    // this tests the chain of error handling starting at AuthInfo
+    // other FileItem problems are tested with "updateFiles"
+    initVault()
+    val app = new StubbedSolrApp()
+    app.expectsHttpAsString(Failure(HttpStatusException("", HttpResponse("", SC_SERVICE_UNAVAILABLE, Map("Status" -> IndexedSeq("")))))) once()
+
+    val result = app.update(storeName, uuidCentaur)
+    inside(result) {
+      case Failure(MixedResultsException(_, HttpStatusException(_, HttpResponse(_, SC_SERVICE_UNAVAILABLE, _)))) =>
     }
   }
 
   it should "not stumble on difficult file names" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val result = new StubbedSolrApp().update(storeName, uuidAnonymized)
+    val app = new StubbedSolrApp()
+    app.expectsHttpAsString(anonymousAuthItem(uuidAnonymized, "YYY")) anyNumberOfTimes()
+
+    val result = app.update(storeName, uuidAnonymized)
     inside(result) { case Success(feedback) =>
       feedback.toString shouldBe s"Bag ${ uuidAnonymized }: 3 times FileSubmittedWithContent"
     }
+  }
+
+  "updateFiles" should "retrieve checksum, files size nor DDM.solrLiterals because file is not accessible" in {
+    val app = new StubbedSolrApp()
+    app.expectsHttpAsString(Success(
+      s"""{
+         |  "itemId":"$uuid/xy.z",
+         |  "owner":"someone",
+         |  "dateAvailable":"1992-07-30",
+         |  "accessibleTo":"NONE",
+         |  "visibleTo":"NONE"
+         |}""".stripMargin)
+    ) once()
+    class MockedBag extends Bag("pdbs", uuid, mock[Vault])
+    val result = app.updateFiles(mock[MockedBag], mockedDDM, <files><file filepath="xy.z"/></files>)
+    result shouldBe Success(BagSubmitted(uuid.toString, Seq.empty))
+  }
+
+  it should "report problems when easy-auth-info returns invalid content" in {
+    clearVault()
+    write(testDir.resolve(s"vault/stores/pdbs/bags/$uuid/metadata/dataset.xml").toFile, "<ddm/>")
+    write(testDir.resolve(s"vault/stores/pdbs/bags/$uuid/metadata/files.xml").toFile, "<files><file filepath='xy.z'/></files>")
+    val authInfoJson = """{ "visibleTo":"ANONYMOUS" }""".stripMargin
+    val app = new StubbedSolrApp()
+    app.expectsHttpAsString(Success(authInfoJson))
+
+    val result = app.update(storeName, uuid)
+    inside(result) {
+      case Failure(MixedResultsException(_, e)) => e.getMessage shouldBe
+        s"""parse error [class org.json4s.package$$MappingException: No usable value for itemId
+           |Did not find value which can be converted into java.lang.String] for: ${ authInfoJson.toOneLiner }""".stripMargin
+    }
+  }
+
+  it should "report an invalid bag: file-item without a path" in {
+    val app = new StubbedSolrApp()
+    class MockedBag extends Bag("pdbs", uuid, mock[Vault])
+    val result = app.updateFiles(mock[MockedBag], mockedDDM, <files><file/></files>)
+    inside(result) {
+      case Failure(MixedResultsException(_, e)) => e.getMessage shouldBe
+        s"invalid files.xml for $uuid: filepath attribute is missing in <file/>"
+    }
+  }
+
+  it should "accept a bag without files" in {
+    val app = new StubbedSolrApp()
+    class MockedBag extends Bag("pdbs", uuid, mock[Vault])
+    val result = app.updateFiles(mock[MockedBag], mockedDDM, <files></files>)
+    result shouldBe Success(BagSubmitted(uuid.toString, Seq.empty))
   }
 
   "delete" should "call the stubbed solrClient.deleteByQuery" in {
@@ -104,7 +197,7 @@ class AppSpec extends TestSupportFixture {
         |    6ccadbad-650c-47ec-936d-2ef42e5f3cda""".stripMargin
     )
     val result = new StubbedSolrApp() {
-      // vaultBagIds/bags can't be a file and directory so we need a stub, a failure demonstrates it's called
+      // vaultBagIds/bags can't be a file and directory so we need a mockedDDM, a failure demonstrates it's called
       override def update(store: String, uuid: UUID): Try[BagSubmitted] = {
         Failure(new Exception("stubbed ApplicationWiring.update"))
       }
@@ -123,7 +216,7 @@ class AppSpec extends TestSupportFixture {
     )
     val result = new StubbedSolrApp() {
 
-      // vaultStoreNames/stores can't be a file and directory so we need a stub, a failure demonstrates it's called
+      // vaultStoreNames/stores can't be a file and directory so we need a mockedDDM, a failure demonstrates it's called
       override def initSingleStore(storeName: String): Try[StoreSubmitted] = {
         Failure(new Exception("stubbed ApplicationWiring.initSingleStore"))
       }

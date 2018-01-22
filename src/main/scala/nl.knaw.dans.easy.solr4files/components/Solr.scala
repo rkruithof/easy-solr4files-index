@@ -39,28 +39,34 @@ trait Solr extends DebugEnhancedLogging {
   val maxFileSizeToExtractContentFrom: Double
   val solrClient: SolrClient
 
-  def createDoc(item: FileItem): Try[FileFeedback] = {
-    item.bag.fileUrl(item.path).flatMap { fileUrl =>
-      val solrDocId = s"${ item.bag.bagId }/${ item.path }"
-      val solrFields = (item.bag.solrLiterals ++ item.ddm.solrLiterals ++ item.solrLiterals)
-        .filter { case (_, v) => v.nonEmpty }
-      if (logger.underlying.isDebugEnabled) logger.debug(solrFields
+  def createDoc(item: FileItem, ddm: DDM): Try[FileFeedback] = {
+    item
+      .bag
+      .fileUrl(item.path)
+      .flatMap(createDoc(item, ddm, _))
+  }
+
+  private def createDoc(item: FileItem, ddm: DDM, fileUrl: URL): Try[FileFeedback] = {
+    val solrDocId = item.authInfoItem.itemId
+    val solrLiterals = (item.solrLiterals ++ ddm.solrLiterals).filter { case (_, v) => v.nonEmpty }
+    if (logger.underlying.isDebugEnabled) {
+      logger.debug(solrLiterals
         .map { case (key, value) => s"$key = $value" }
         .mkString("\n\t")
       )
-      if (item.size > maxFileSizeToExtractContentFrom) {
-        logger.info(s"Submission without content of [$solrDocId]")
-        submitWithOnlyMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
-      }
-      else {
-        logger.info(s"Submission with content of [$solrDocId]")
-        submitWithContent(fileUrl, solrDocId, solrFields)
-          .map(_ => FileSubmittedWithContent(solrDocId))
-          .recoverWith { case t =>
-            logger.warn(s"Submission with content of [$solrDocId] failed with ${ t.getMessage }")
-            submitWithOnlyMetadata(solrDocId, solrFields).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
-          }
-      }
+    }
+    if (item.size > maxFileSizeToExtractContentFrom) {
+      logger.info(s"Submission without content of [$solrDocId]")
+      submitWithOnlyMetadata(solrDocId, solrLiterals).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
+    }
+    else {
+      logger.info(s"Submission with content of [$solrDocId]")
+      submitWithContent(fileUrl, solrDocId, solrLiterals)
+        .map(_ => FileSubmittedWithContent(solrDocId))
+        .recoverWith { case t =>
+          logger.warn(s"Submission with content of [$solrDocId] failed with ${ t.getMessage }")
+          submitWithOnlyMetadata(solrDocId, solrLiterals).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
+        }
     }
   }
 

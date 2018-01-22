@@ -21,13 +21,17 @@ import java.nio.file.{ Files, Path, Paths }
 import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files.components.Vault
+import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.FileUtils
+import org.scalamock.handlers.CallHandler1
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Inside, Matchers }
 
 import scala.util.Try
 
-trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeAndAfterEach {
+trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeAndAfterEach with MockFactory {
 
+  val uuid: UUID = UUID.randomUUID()
   lazy val testDir: Path = {
     val path = Paths.get(s"target/test/${ getClass.getSimpleName }").toAbsolutePath
     FileUtils.deleteQuietly(path.toFile)
@@ -37,11 +41,23 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
 
   abstract class TestApp() extends EasySolr4filesIndexApp {
 
+    override lazy val configuration: Configuration = new Configuration("", new PropertiesConfiguration() {
+      addProperty("auth-info.url", "http://hostThatDoesNotExist:20170/")
+    })
+
     override val maxFileSizeToExtractContentFrom: Double = 64 * 1024 * 1024
     override val vaultBaseUri: URI = new URI(s"file:///${ testDir.resolve("vault").toAbsolutePath }/")
     override val authentication: Authentication = new Authentication {
       override val ldapUsersEntry: String = "ou=users,ou=easy,dc=dans,dc=knaw,dc=nl"
-      override val ldapProviderUrl: String = "ldap://hostThatDoesNotExist:389"
+      override val ldapProviderUrl: String = "ldap://ldapHostDoesNotExist:389"
+    }
+    override val authorisation: Authorisation = new Authorisation {
+      override val baseUri: URI = new URI("http://authInfoHostDoesNotExist:20170/")
+    }
+    override val http: HttpWorker = mock[HttpWorker]
+
+    def expectsHttpAsString(result: Try[String]): CallHandler1[URI, Try[String]] = {
+      (http.getHttpAsString(_: URI)) expects * returning result
     }
   }
 

@@ -22,51 +22,27 @@
     - dans.local-test-vm-base
     - dans.local-yum-repo
 
-########### bag store
-
 - hosts: "test"
+  become: yes
   vars:
     dans_config_base: "/etc/opt/dans.knaw.nl"
-    stores_dir: "/data/bag-stores"
-    bag_stores:
-      - { name: "pdbs",      base_dir: "{{ stores_dir }}/pdbs" }
-      - { name: "easy",      base_dir: "{{ stores_dir }}/easy" }
-      - { name: "pan",       base_dir: "{{ stores_dir }}/pan" }
-  become: yes
   tasks:
 
-  - name: Installing bag-store package
-    yum:
-      name: "dans.knaw.nl-easy-bag-store"
-      state: latest
+    - name: Installing packages
+      yum:
+        name: "dans.knaw.nl-{{ item }}"
+        state: latest
+      with_items:
+        - easy-bag-store
+        - easy-auth-info
+        - easy-solr4files-index
 
-  - name: Configure bag stores
-    lineinfile:
-        dest: "{{ dans_config_base }}/easy-bag-store/stores.properties"
-        line: "{{ item.name }}={{ item.base_dir }}"
-    with_items: "{{ bag_stores }}"
+    - include_role:
+        name: bag-store-dirs
 
-  - name: Create empty bag-store base directories
-    file:
-      path: "{{ stores_dir }}/{{ item.name }}"
-      state: "directory"
-      owner: "easy-bag-store"
-      group: "easy-bag-store"
-      mode: "0775"
-    with_items: "{{ bag_stores }}"
+########### the solr core
 
-  - name: Create link to test data
-    file:
-      src: /vagrant/src/test/resources/vault/stores/pdbs/bags
-      dest: /home/vagrant/test-data
-      state: link
-
-  - service:
-      name: "easy-bag-store"
-      state: restarted
-      enabled: yes
-
-########### solr
+# TODO move into a role, an attempt caused ...ERROR: /etc/init.d/solr already exists!...
 
 - hosts: "test"
   vars:
@@ -118,36 +94,16 @@
       state: restarted
       enabled: yes
 
-########### ldap
+########### start services
 
-- hosts: "test"
-  vars:
-    easy_ldap_dir_easyadmin_password: "easyadmin"
-    easy_ldap_dir_ldapadmin_password: "ldapadmin"
-    easy_test_users_ldapadmin_password: "ldapadmin"
-  become: yes
-  tasks:
-
-  - name: Install Ldap
-    include_role:
-      name: "dans.easy-ldap-dir"
-
-  - name: Install easy users
-    include_role:
-      name: "dans.easy-test-users"
-
-########### the intended service
-
-# TODO fix the need for 'yum upgrade' and 'service restart' after re-build and 'vagrant provision'
 - hosts: "test"
   become: yes
   tasks:
-    - name: Installing package
-      yum:
-        name: dans.knaw.nl-easy-solr4files-index
-        state: latest
-
-    - service:
-        name: easy-solr4files-index
-        state: started
-        enabled: yes
+  - service:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+    with_items:
+      - easy-auth-info
+      - easy-bag-store
+      - easy-solr4files-index

@@ -24,6 +24,8 @@ import org.apache.solr.common.params.SolrParams
 import org.apache.solr.common.util.NamedList
 import org.scalatra.test.scalatest.ScalatraSuite
 
+import scala.util.Success
+
 class SolrErrorHandlingSpec extends TestSupportFixture
   with ServletFixture
   with ScalatraSuite {
@@ -72,9 +74,18 @@ class SolrErrorHandlingSpec extends TestSupportFixture
 
   "submit" should "return the exception bubbling up from solrClient.request" in {
     assume(canConnectToEasySchemas)
+    val path = "data/path/to/a/random/video/hubble.mpg"
+    app.expectsHttpAsString(Success(
+      s"""{
+         |  "itemId":"$uuidCentaur/$path",
+         |  "owner":"someone",
+         |  "dateAvailable":"1992-07-30",
+         |  "accessibleTo":"ANONYMOUS",
+         |  "visibleTo":"ANONYMOUS"
+         |}""".stripMargin))
     initVault()
     post(s"/fileindex/update/pdbs/${ uuidCentaur }") {
-      body shouldBe s"solr update of file ${ uuidCentaur }/data/path/to/a/random/video/hubble.mpg failed with mocked add"
+      body shouldBe s"solr update of file ${ uuidCentaur }/$path failed with mocked add"
       status shouldBe SC_INTERNAL_SERVER_ERROR
     }
   }
