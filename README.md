@@ -84,33 +84,33 @@ ARGUMENTS
 
     Options:
 
-      --help      Show help message
-      --version   Show version of this program
+      -h, --help      Show help message
+      -v, --version   Show version of this program
 
     Subcommand: update - Update accessible files of a bag in the SOLR index
       -s, --bag-store  <arg>   Name of the bag store (default = pdbs)
-          --help               Show help message
+      -h, --help               Show help message
     
      trailing arguments:
       bag-uuid (required)
     ---
     
     Subcommand: delete - Delete documents from the SOLR index
-          --help   Show help message
+      -h, --help   Show help message
     
      trailing arguments:
       solr-query (required)
     ---
     
     Subcommand: init - Rebuild the SOLR index from scratch for active bags in one or all store(s)
-          --help   Show help message
+      -h, --help   Show help message
     
      trailing arguments:
       bag-store (not required)
     ---
     
     Subcommand: run-service - Starts EASY Solr4files Index as a daemon that services HTTP requests
-          --help   Show help message
+      -h, --help   Show help message
     ---
 
 EXAMPLES

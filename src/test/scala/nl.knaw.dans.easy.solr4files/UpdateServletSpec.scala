@@ -59,7 +59,7 @@ class UpdateServletSpec extends TestSupportFixture
 
   it should "return NOT FOUND for an empty path" in {
     post("/init/") {
-      body should startWith("""Requesting "POST \/init\/" on servlet "" but only have:""")
+      body should startWith("""Requesting "POST /init/" on servlet "" but only have:""")
       status shouldBe SC_NOT_FOUND
     }
   }
@@ -75,7 +75,7 @@ class UpdateServletSpec extends TestSupportFixture
 
   it should "return NOT FOUND if uuid is missing" in {
     post("/update/pdbs/") {
-      body should startWith("""Requesting "POST \/update\/pdbs\/" on servlet "" but only have:""")
+      body should startWith("""Requesting "POST /update/pdbs/" on servlet "" but only have:""")
       status shouldBe SC_NOT_FOUND
     }
   }
