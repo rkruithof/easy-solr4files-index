@@ -120,11 +120,13 @@ trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
   }
 
   private def getFileItem(bag: Bag, fileNode: Node): Option[Try[FileItem]] = {
+    val title = (fileNode \ "title").text
+    val mimeType = (fileNode \ "format").text
     getAccessibleAuthInfo(bag.bagId, fileNode) match {
       case None => Some(Failure(new Exception(s"invalid files.xml for ${ bag.bagId }: filepath attribute is missing in ${ fileNode.toString().toOneLiner }")))
       case Some(Failure(t)) => Some(Failure(t))
       case Some(Success(authInfoItem)) if !authInfoItem.isAccessible => None
-      case Some(Success(authInfoItem)) => Some(Success(FileItem(bag, fileNode, authInfoItem)))
+      case Some(Success(authInfoItem)) => Some(Success(FileItem(bag, title, mimeType , authInfoItem)))
     }
   }
 
