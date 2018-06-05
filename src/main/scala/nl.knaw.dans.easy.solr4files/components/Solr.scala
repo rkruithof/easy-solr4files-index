@@ -56,7 +56,7 @@ trait Solr extends DebugEnhancedLogging {
         .mkString("\n\t")
       )
     }
-    val fileSizeOkForIndexing = maxFileSizeToExtractContentFrom < item.size
+    val fileSizeOkForIndexing = maxFileSizeToExtractContentFrom > item.size
     val fileMimeTypeEligibleForIndexing = mimeTypesToExtractContentFrom.contains(item.mimeType)
     if (fileSizeOkForIndexing && fileMimeTypeEligibleForIndexing) {
       logger.info(s"Submission with content of [$solrDocId]")
