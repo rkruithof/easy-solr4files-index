@@ -63,7 +63,7 @@ trait Solr extends DebugEnhancedLogging {
       submitWithContent(fileUrl, solrDocId, solrLiterals)
         .map(_ => FileSubmittedWithContent(solrDocId))
         .recoverWith { case t =>
-          logger.warn(s"Submission with content of [$solrDocId] failed. Proceeding to index only metadata. Message for Solr: ${ t.getMessage }")
+          logger.warn(s"Submission with content of [$solrDocId] failed. Proceeding to index only metadata. Message from Solr: ${ t.getMessage }")
           submitWithOnlyMetadata(solrDocId, solrLiterals).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
         }
     }
