@@ -36,6 +36,7 @@ import scala.language.postfixOps
 import scala.util.{ Failure, Success, Try }
 
 trait Solr extends DebugEnhancedLogging {
+  val mimeTypesToExtractContentFrom: Seq[String]
   val maxFileSizeToExtractContentFrom: Double
   val solrClient: SolrClient
 
@@ -55,18 +56,20 @@ trait Solr extends DebugEnhancedLogging {
         .mkString("\n\t")
       )
     }
-    if (item.size > maxFileSizeToExtractContentFrom) {
-      logger.info(s"Submission without content of [$solrDocId]")
-      submitWithOnlyMetadata(solrDocId, solrLiterals).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
-    }
-    else {
+    val fileSizeOkForIndexing = maxFileSizeToExtractContentFrom > item.size
+    val fileMimeTypeEligibleForIndexing = mimeTypesToExtractContentFrom.contains(item.mimeType)
+    if (fileSizeOkForIndexing && fileMimeTypeEligibleForIndexing) {
       logger.info(s"Submission with content of [$solrDocId]")
       submitWithContent(fileUrl, solrDocId, solrLiterals)
         .map(_ => FileSubmittedWithContent(solrDocId))
         .recoverWith { case t =>
-          logger.warn(s"Submission with content of [$solrDocId] failed with ${ t.getMessage }")
+          logger.warn(s"Submission with content of [$solrDocId] failed. Proceeding to index only metadata. Message from Solr: ${ t.getMessage }")
           submitWithOnlyMetadata(solrDocId, solrLiterals).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
         }
+    }
+    else {
+      logger.info(s"Submission without content of [$solrDocId] (file size OK for extraction = $fileSizeOkForIndexing, MIME-Type eligible = $fileMimeTypeEligibleForIndexing)")
+      submitWithOnlyMetadata(solrDocId, solrLiterals).map(_ => FileSubmittedWithOnlyMetadata(solrDocId))
     }
   }
 

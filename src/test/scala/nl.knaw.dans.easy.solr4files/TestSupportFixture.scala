@@ -46,6 +46,7 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     })
 
     override val maxFileSizeToExtractContentFrom: Double = 64 * 1024 * 1024
+    override val mimeTypesToExtractContentFrom: Seq[String] = Seq("text/plain", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/xml")
     override val vaultBaseUri: URI = new URI(s"file:///${ testDir.resolve("vault").toAbsolutePath }/")
     override val authentication: Authentication = new Authentication {
       override val ldapUsersEntry: String = "ou=users,ou=easy,dc=dans,dc=knaw,dc=nl"

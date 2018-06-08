@@ -49,7 +49,7 @@ class FileItemSpec extends TestSupportFixture {
       accessibleTo = RESTRICTED_GROUP,
       visibleTo = RESTRICTED_GROUP
     )
-    val solrLiterals = FileItem(mockedBag, xml, authInfoItem).solrLiterals.toMap
+    val solrLiterals = FileItem(mockedBag, (xml \ "title").text, (xml \ "format").text , authInfoItem).solrLiterals.toMap
     solrLiterals("file_path") shouldBe filePath
     solrLiterals("file_size") shouldBe s"$fileSize"
     solrLiterals("file_title") shouldBe "video about the centaur meteorite"

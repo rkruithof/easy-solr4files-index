@@ -20,7 +20,7 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.xml.Node
 
-case class FileItem(bag: Bag, xml: Node, authInfoItem: AuthorisationItem) extends DebugEnhancedLogging {
+case class FileItem(bag: Bag, title: String, mimeType: String, authInfoItem: AuthorisationItem) extends DebugEnhancedLogging {
 
   //strip the UUID from the itemId including the first slash
   val path: String = authInfoItem.itemId.replaceAll("^[^/]+/", "")
@@ -30,9 +30,9 @@ case class FileItem(bag: Bag, xml: Node, authInfoItem: AuthorisationItem) extend
   // lazy postpones loading Bag.sha's
   lazy val solrLiterals: SolrLiterals = Seq(
     ("file_path", path),
-    ("file_title", (xml \ "title").text),
+    ("file_title", title),
     ("file_checksum", bag.sha(path)),
-    ("file_mime_type", (xml \ "format").text),
+    ("file_mime_type", mimeType),
     ("file_size", size.toString),
     ("file_accessible_to", authInfoItem.accessibleTo.toString),
     ("dataset_depositor_id", authInfoItem.owner),

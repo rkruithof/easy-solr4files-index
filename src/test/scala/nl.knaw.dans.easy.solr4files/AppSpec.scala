@@ -90,9 +90,9 @@ class AppSpec extends TestSupportFixture {
     val app = new StubbedSolrApp()
     Seq(
       "data/path/to/a/random/video/hubble.mpg",
+      "data/reisverslag/centaur-nederlands.srt",
       "data/reisverslag/centaur.mpg",
       "data/reisverslag/centaur.srt",
-      "data/reisverslag/centaur-nederlands.srt",
       "data/reisverslag/deel01.docx",
       "data/reisverslag/deel01.txt",
       "data/reisverslag/deel02.txt",
@@ -127,7 +127,7 @@ class AppSpec extends TestSupportFixture {
 
     val result = app.update(storeName, uuidAnonymized)
     inside(result) { case Success(feedback) =>
-      feedback.toString shouldBe s"Bag ${ uuidAnonymized }: 3 times FileSubmittedWithContent"
+      feedback.toString shouldBe s"Bag ${ uuidAnonymized }: 2 times FileSubmittedWithContent, 1 times FileSubmittedWithOnlyMetadata"
     }
   }
 
