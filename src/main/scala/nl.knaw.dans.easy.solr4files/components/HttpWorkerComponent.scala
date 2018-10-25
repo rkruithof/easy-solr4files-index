@@ -38,8 +38,12 @@ trait HttpWorkerComponent {
       else failed(uri, response)
     }
 
-    def getHttpAsString(uri: URI): Try[String] = {
-      val response = Http(uri.toString).method("GET").asString
+    def getHttpAsString(uri: URI, connTimeoutMs: Int, readTimeoutMs: Int): Try[String] = {
+      val response = Http(uri.toString)
+        .method("GET")
+        .timeout(connTimeoutMs, readTimeoutMs)
+        .asString
+
       if (response.isSuccess) Success(response.body)
       else failed(uri, response)
     }

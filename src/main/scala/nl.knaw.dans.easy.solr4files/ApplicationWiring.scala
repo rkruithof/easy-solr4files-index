@@ -41,6 +41,8 @@ trait ApplicationWiring
   }
   override val authorisation: Authorisation = new Authorisation {
     override val baseUri: URI = new URI(configuration.properties.getString("auth-info.url"))
+    override val connectionTimeOutMs: Int = configuration.properties.getInt("auth-info.connection-timeout-ms")
+    override val readTimeOutMs: Int = configuration.properties.getInt("auth-info.read-timeout-ms")
   }
   override val http: HttpWorker = new HttpWorker {}
 

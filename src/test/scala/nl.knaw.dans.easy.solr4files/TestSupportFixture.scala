@@ -23,7 +23,7 @@ import java.util.UUID
 import nl.knaw.dans.easy.solr4files.components.Vault
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.FileUtils
-import org.scalamock.handlers.CallHandler1
+import org.scalamock.handlers.CallHandler3
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Inside, Matchers }
 
@@ -43,6 +43,8 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
 
     override lazy val configuration: Configuration = new Configuration("", new PropertiesConfiguration() {
       addProperty("auth-info.url", "http://hostThatDoesNotExist:20170/")
+      addProperty("auth-info.connection-timeout-ms", 2000)
+      addProperty("auth-info.read-timeout-ms", 2000)
     })
 
     override val maxFileSizeToExtractContentFrom: Double = 64 * 1024 * 1024
@@ -54,11 +56,13 @@ trait TestSupportFixture extends FlatSpec with Matchers with Inside with BeforeA
     }
     override val authorisation: Authorisation = new Authorisation {
       override val baseUri: URI = new URI("http://authInfoHostDoesNotExist:20170/")
+      override val connectionTimeOutMs: Int = 2000
+      override val readTimeOutMs: Int = 2000
     }
     override val http: HttpWorker = mock[HttpWorker]
 
-    def expectsHttpAsString(result: Try[String]): CallHandler1[URI, Try[String]] = {
-      (http.getHttpAsString(_: URI)) expects * returning result
+    def expectsHttpAsString(result: Try[String]): CallHandler3[URI, Int, Int, Try[String]] = {
+      (http.getHttpAsString(_: URI, _: Int, _: Int)) expects (*, *, *) returning result
     }
   }
 
