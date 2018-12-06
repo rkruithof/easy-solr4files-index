@@ -7,6 +7,9 @@ ExecStart=/bin/java \
  -Dapp.home=/opt/dans.knaw.nl/easy-solr4files-index \
  -jar /opt/dans.knaw.nl/easy-solr4files-index/bin/easy-solr4files-index.jar run-service
 
+# Java returns 143 even if the SIGTERM was handled correctly.
+SuccessExitStatus=143
+
 User=easy-solr4files-index
 Group=easy-solr4files-index
 
