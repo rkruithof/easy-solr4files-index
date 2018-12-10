@@ -120,11 +120,6 @@
             <artifactId>commons-daemon</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.gnieh</groupId>
-            <artifactId>logback-journal</artifactId>
-            <version>0.3.0</version>
-        </dependency>
-        <dependency>
             <!--
             TODO move dependency to dans-prototype once the other SOLR is upgraded from v3 to v6
             currently this gives too many problems in the inheritance to easy-app/easy-webui
