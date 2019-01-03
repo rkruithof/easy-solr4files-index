@@ -19,13 +19,14 @@ import java.util.UUID
 
 import org.apache.http.HttpStatus._
 import org.scalamock.scalatest.MockFactory
+import org.scalatra.test.EmbeddedJettyContainer
 import org.scalatra.test.scalatest.ScalatraSuite
 
 import scala.util.{ Failure, Success }
 import scalaj.http.HttpResponse
 
 class UpdateServletSpec extends TestSupportFixture
-  with ServletFixture
+  with EmbeddedJettyContainer
   with ScalatraSuite
   with MockFactory {
 
