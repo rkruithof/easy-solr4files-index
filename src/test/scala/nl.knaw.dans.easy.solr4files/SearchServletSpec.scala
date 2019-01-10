@@ -22,12 +22,12 @@ import org.apache.solr.common.params.SolrParams
 import org.apache.solr.common.util.NamedList
 import org.apache.solr.common.{ SolrDocument, SolrDocumentList }
 import org.scalamock.scalatest.MockFactory
+import org.scalatra.test.EmbeddedJettyContainer
 import org.scalatra.test.scalatest.ScalatraSuite
-
 import scalaj.http.Base64
 
 class SearchServletSpec extends TestSupportFixture
-  with ServletFixture
+  with EmbeddedJettyContainer
   with ScalatraSuite
   with MockFactory {
 
@@ -78,7 +78,7 @@ class SearchServletSpec extends TestSupportFixture
 
   it should "return json" in {
     get(s"/?text=something") {
-      header.get("Content-Type") shouldBe Some("application/json;charset=UTF-8")
+      header.get("Content-Type") shouldBe Some("application/json;charset=utf-8")
       body should startWith(
         """{
           |  "summary":{
@@ -150,7 +150,7 @@ class SearchServletSpec extends TestSupportFixture
       """Digest realm="testrealm@host.com",
         |qop="auth,auth-int",
         |nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
-        |opaque="5ccc069c403ebaf9f0171e9517f40e41"""".stripMargin)) {
+        |opaque="5ccc069c403ebaf9f0171e9517f40e41"""".stripMargin.replace("\n", ""))) {
       body shouldBe "Only anonymous search or basic authentication supported"
       status shouldBe SC_BAD_REQUEST
     }

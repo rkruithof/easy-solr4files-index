@@ -22,12 +22,13 @@ import org.apache.solr.client.solrj.{ SolrClient, SolrRequest, SolrResponse }
 import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.common.params.SolrParams
 import org.apache.solr.common.util.NamedList
+import org.scalatra.test.EmbeddedJettyContainer
 import org.scalatra.test.scalatest.ScalatraSuite
 
 import scala.util.Success
 
 class SolrErrorHandlingSpec extends TestSupportFixture
-  with ServletFixture
+  with EmbeddedJettyContainer
   with ScalatraSuite {
 
   private val app = new TestApp() {
