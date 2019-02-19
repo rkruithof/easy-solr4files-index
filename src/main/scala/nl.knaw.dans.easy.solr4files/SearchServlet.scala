@@ -31,8 +31,6 @@ import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 import scala.util.{ Failure, Success, Try }
 import scalaj.http.HttpResponse
 
-import scala.language.postfixOps
-
 class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   with ServletLogger
   with PlainLogFormatter
@@ -48,7 +46,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
         case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_SERVICE_UNAVAILABLE => ServiceUnavailable(message)
         case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_REQUEST_TIMEOUT => RequestTimeout(message)
         case _ => InternalServerError()
-      } logResponse
+      }.logResponse
   }
 
   get("/") {
@@ -70,7 +68,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
         InternalServerError("not expected exception")
     }
     logger.info(s"file search returned ${ result.status } (${ result.body }) for $params")
-    result logResponse
+    result.logResponse
   }
 
   /**

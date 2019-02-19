@@ -24,7 +24,6 @@ import org.apache.http.HttpStatus._
 import org.scalatra._
 import scalaj.http.HttpResponse
 
-import scala.language.postfixOps
 import scala.util.Try
 
 class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
@@ -35,7 +34,7 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
 
   get("/") {
     contentType = "text/plain"
-    Ok("EASY File Index is running.") logResponse
+    Ok("EASY File Index is running.").logResponse
   }
 
   private def respond(result: Try[String]): ActionResult = {
@@ -53,7 +52,7 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
         case t =>
           logger.error(s"not expected exception", t)
           InternalServerError(t.getMessage) // for an internal servlet we can and should expose the cause
-      } logResponse
+      }.logResponse
   }
 
   private def getUUID = {
@@ -69,19 +68,19 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
       .map(uuid => respond(app.update(params("store"), uuid).map(_.msg)))
       .getOrRecover(badUuid)
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result logResponse
+    result.logResponse
   }
 
   post("/init") {
     val result = respond(app.initAllStores())
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result logResponse
+    result.logResponse
   }
 
   post("/init/:store") {
     val result = respond(app.initSingleStore(params("store")).map(_.msg))
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result logResponse
+    result.logResponse
   }
 
   delete("/:store/:uuid") {
@@ -89,13 +88,13 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
       .map(uuid => respond(app.delete(s"easy_dataset_id:$uuid")))
       .getOrRecover(badUuid)
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result logResponse
+    result.logResponse
   }
 
   delete("/:store") {
     val result = respond(app.delete(s"easy_dataset_store_id:${ params("store") }"))
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result logResponse
+    result.logResponse
   }
 
   delete("/") {
@@ -103,6 +102,6 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
       .map(q => respond(app.delete(q)))
       .getOrElse(BadRequest("delete requires param 'q', got " + params.asString))
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result logResponse
+    result.logResponse
   }
 }
