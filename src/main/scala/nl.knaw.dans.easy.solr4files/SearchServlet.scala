@@ -46,7 +46,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
         case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_SERVICE_UNAVAILABLE => ServiceUnavailable(message)
         case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_REQUEST_TIMEOUT => RequestTimeout(message)
         case _ => InternalServerError()
-      }.logResponse
+      }
   }
 
   get("/") {
