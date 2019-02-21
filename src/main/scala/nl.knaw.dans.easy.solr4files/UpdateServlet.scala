@@ -52,7 +52,7 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
         case t =>
           logger.error(s"not expected exception", t)
           InternalServerError(t.getMessage) // for an internal servlet we can and should expose the cause
-      }.logResponse
+      }
   }
 
   private def getUUID = {
