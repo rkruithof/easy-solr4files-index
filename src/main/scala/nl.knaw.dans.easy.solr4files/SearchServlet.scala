@@ -18,6 +18,7 @@ package nl.knaw.dans.easy.solr4files
 import java.net.URLDecoder
 
 import nl.knaw.dans.easy.solr4files.SearchServlet.userFilters
+import nl.knaw.dans.lib.logging.servlet._
 import nl.knaw.dans.easy.solr4files.components.User
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -30,7 +31,10 @@ import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 import scala.util.{ Failure, Success, Try }
 import scalaj.http.HttpResponse
 
-class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with DebugEnhancedLogging {
+class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
+  with ServletLogger
+  with PlainLogFormatter
+  with DebugEnhancedLogging {
   logger.info("File index Servlet running...")
 
   private def respond(result: Try[String]): ActionResult = {
@@ -64,7 +68,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
         InternalServerError("not expected exception")
     }
     logger.info(s"file search returned ${ result.status } (${ result.body }) for $params")
-    result
+    result.logResponse
   }
 
   /**

@@ -19,18 +19,22 @@ import java.util.UUID
 
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import nl.knaw.dans.lib.logging.servlet._
 import org.apache.http.HttpStatus._
 import org.scalatra._
-
-import scala.util.Try
 import scalaj.http.HttpResponse
 
-class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with DebugEnhancedLogging {
+import scala.util.Try
+
+class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
+  with ServletLogger
+  with PlainLogFormatter
+  with DebugEnhancedLogging {
   logger.info("File index Servlet running...")
 
   get("/") {
     contentType = "text/plain"
-    Ok("EASY File Index is running.")
+    Ok("EASY File Index is running.").logResponse
   }
 
   private def respond(result: Try[String]): ActionResult = {
@@ -64,19 +68,19 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
       .map(uuid => respond(app.update(params("store"), uuid).map(_.msg)))
       .getOrRecover(badUuid)
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result
+    result.logResponse
   }
 
   post("/init") {
     val result = respond(app.initAllStores())
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result
+    result.logResponse
   }
 
   post("/init/:store") {
     val result = respond(app.initSingleStore(params("store")).map(_.msg))
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result
+    result.logResponse
   }
 
   delete("/:store/:uuid") {
@@ -84,13 +88,13 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
       .map(uuid => respond(app.delete(s"easy_dataset_id:$uuid")))
       .getOrRecover(badUuid)
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result
+    result.logResponse
   }
 
   delete("/:store") {
     val result = respond(app.delete(s"easy_dataset_store_id:${ params("store") }"))
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result
+    result.logResponse
   }
 
   delete("/") {
@@ -98,6 +102,6 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet with De
       .map(q => respond(app.delete(q)))
       .getOrElse(BadRequest("delete requires param 'q', got " + params.asString))
     logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result
+    result.logResponse
   }
 }
