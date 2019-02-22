@@ -20,11 +20,12 @@ import java.net.URI
 import nl.knaw.dans.easy.solr4files.{ HttpStatusException, OutputStreamProvider }
 import org.apache.commons.io.IOUtils
 import org.eclipse.jetty.http.HttpStatus.OK_200
+import scalaj.http.HttpResponse
 
 import scala.util.{ Failure, Success, Try }
-import scalaj.http.{ Http, HttpResponse }
 
 trait HttpWorkerComponent {
+  this: HttpContext =>
 
   val http: HttpWorker
 

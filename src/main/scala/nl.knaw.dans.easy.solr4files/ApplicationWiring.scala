@@ -31,10 +31,12 @@ trait ApplicationWiring
     with Solr
     with AuthorisationComponent
     with HttpWorkerComponent
+    with HttpContext
     with AuthenticationComponent {
 
   val configuration: Configuration
 
+  override val applicationVersion: String = configuration.version
   override val authentication: Authentication = new Authentication {
     override val ldapUsersEntry: String = configuration.properties.getString("ldap.users-entry")
     override val ldapProviderUrl: String = configuration.properties.getString("ldap.provider.url")
