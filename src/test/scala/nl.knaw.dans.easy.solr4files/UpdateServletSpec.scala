@@ -33,13 +33,6 @@ class UpdateServletSpec extends TestSupportFixture
   private val app = mock[TestApp]
   addServlet(new UpdateServlet(app), "/*")
 
-  "get /" should "return the message that the service is running" in {
-    get("/") {
-      body shouldBe "EASY File Index is running."
-      status shouldBe SC_OK
-    }
-  }
-
   "post /init[/:store]" should "return a feedback message for all stores" in {
     app.initAllStores _ expects() once() returning
       Success("xxx")
