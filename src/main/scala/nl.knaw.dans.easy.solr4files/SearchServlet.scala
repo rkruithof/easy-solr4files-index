@@ -34,6 +34,7 @@ import scalaj.http.HttpResponse
 class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   with ServletLogger
   with PlainLogFormatter
+  with LogResponseBodyOnError
   with DebugEnhancedLogging {
   logger.info("File index Servlet running...")
 
@@ -56,19 +57,15 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
     val fetchFields = Seq("easy_dataset_*", "easy_file_*") // TODO params.get("???") but what is possible allowed?
     val fetchExceptions = Seq("easy_dataset_depositor_id")
 
-    // no command line equivalent, use http://localhost:8983/solr/#/fileitems/query
-    // or for example:           curl 'http://localhost:8983/solr/fileitems/query?q=*'
-    val result = app.authenticate(new BasicAuthRequest(request)) match {
-      case (Success(user)) => respond(app.search(createQuery(user, fetchFields), fetchExceptions))
-      case (Failure(InvalidUserPasswordException(_, _))) => Unauthorized()
-      case (Failure(AuthenticationNotAvailableException(_))) => ServiceUnavailable("Authentication service not available, try anonymous search")
-      case (Failure(AuthenticationTypeNotSupportedException(_))) => BadRequest("Only anonymous search or basic authentication supported")
-      case (Failure(t)) =>
+    app.authenticate(new BasicAuthRequest(request)) match {
+      case Success(user) => respond(app.search(createQuery(user, fetchFields), fetchExceptions))
+      case Failure(InvalidUserPasswordException(_, _)) => Unauthorized()
+      case Failure(AuthenticationNotAvailableException(_)) => ServiceUnavailable("Authentication service not available, try anonymous search")
+      case Failure(AuthenticationTypeNotSupportedException(_)) => BadRequest("Only anonymous search or basic authentication supported")
+      case Failure(t) =>
         logger.error(s"not expected exception", t)
         InternalServerError("not expected exception")
     }
-    logger.info(s"file search returned ${ result.status } (${ result.body }) for $params")
-    result.logResponse
   }
 
   /**
@@ -124,7 +121,6 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   }
 
   private def userSpecifiedFilters(): Seq[Option[String]] = {
-
     userFilters.map(key =>
       multiParams
         .get(key)
@@ -146,7 +142,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
 object SearchServlet {
 
   // TODO keep in sync with literals returned by DDM, Bag and FileItem classes
-  val userFilters = Seq(
+  val userFilters: Seq[String] = Seq(
     "dataset_id",
     "dataset_doi",
     "dataset_depositor_id",

@@ -22,11 +22,12 @@ import org.scalatra._
 class EasySolr4FilesServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   with ServletLogger
   with PlainLogFormatter
+  with LogResponseBodyOnError
   with DebugEnhancedLogging {
   logger.info("File index Servlet running...")
 
   get("/") {
     contentType = "text/plain"
-    Ok(s"EASY File Index is running v${app.configuration.version}.").logResponse
+    Ok(s"EASY File Index is running v${app.configuration.version}.")
   }
 }

@@ -29,6 +29,7 @@ import scala.util.Try
 class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   with ServletLogger
   with PlainLogFormatter
+  with LogResponseBodyOnError
   with DebugEnhancedLogging {
   logger.info("File index Servlet running...")
 
@@ -59,44 +60,32 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   }
 
   post("/update/:store/:uuid") {
-    val result = getUUID
+    getUUID
       .map(uuid => respond(app.update(params("store"), uuid).map(_.msg)))
       .getOrRecover(badUuid)
-    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result.logResponse
   }
 
   post("/init") {
-    val result = respond(app.initAllStores())
-    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result.logResponse
+    respond(app.initAllStores())
   }
 
   post("/init/:store") {
-    val result = respond(app.initSingleStore(params("store")).map(_.msg))
-    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result.logResponse
+    respond(app.initSingleStore(params("store")).map(_.msg))
   }
 
   delete("/:store/:uuid") {
-    val result = getUUID
+    getUUID
       .map(uuid => respond(app.delete(s"easy_dataset_id:$uuid")))
       .getOrRecover(badUuid)
-    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result.logResponse
   }
 
   delete("/:store") {
-    val result = respond(app.delete(s"easy_dataset_store_id:${ params("store") }"))
-    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result.logResponse
+    respond(app.delete(s"easy_dataset_store_id:${ params("store") }"))
   }
 
   delete("/") {
-    val result = params.get("q")
+    params.get("q")
       .map(q => respond(app.delete(q)))
       .getOrElse(BadRequest("delete requires param 'q', got " + params.asString))
-    logger.info(s"update returned ${ result.status } (${ result.body }) for $params")
-    result.logResponse
   }
 }
