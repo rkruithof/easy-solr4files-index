@@ -20,6 +20,7 @@ import java.nio.file.Path
 import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files._
+import nl.knaw.dans.lib.encode.PathEncoding
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.json4s.{ DefaultFormats, _ }
 
@@ -38,7 +39,7 @@ trait AuthorisationComponent extends DebugEnhancedLogging {
     private implicit val jsonFormats: Formats = DefaultFormats
 
     def getAuthInfoItem(bagId: UUID, path: Path): Try[AuthorisationItem] = {
-      val uri = baseUri.resolve(s"$bagId/${ escapePath(path) }")
+      val uri = baseUri.resolve(s"$bagId/${ path.escapePath }")
       for {
         jsonString <- http.getHttpAsString(uri, connectionTimeOutMs, readTimeOutMs)
         jsonOneLiner = jsonString.toOneLiner

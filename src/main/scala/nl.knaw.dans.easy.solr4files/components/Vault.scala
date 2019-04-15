@@ -20,6 +20,7 @@ import java.nio.file.Paths
 import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files._
+import nl.knaw.dans.lib.encode.PathEncoding
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.util.Try
@@ -51,7 +52,7 @@ trait Vault extends DebugEnhancedLogging {
   }
 
   def fileURL(storeName: String, bagId: UUID, file: String): Try[URL] = Try {
-    val f = escapePath(Paths.get(file))
+    val f = Paths.get(file).escapePath
     vaultBaseUri.resolve(s"stores/$storeName/bags/$bagId/$f").toURL
   }
 }

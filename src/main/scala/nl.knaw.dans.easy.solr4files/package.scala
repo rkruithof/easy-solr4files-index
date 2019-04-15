@@ -17,9 +17,7 @@ package nl.knaw.dans.easy
 
 import java.io.{ File, OutputStream }
 import java.net.{ URL, URLDecoder }
-import java.nio.file.Path
 
-import com.google.common.net.UrlEscapers
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.io.FileUtils.readFileToString
@@ -27,24 +25,18 @@ import org.apache.solr.common.util.NamedList
 import org.scalatra
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.{ Failure, Success, Try }
 import scala.xml.{ Elem, Node, XML }
 import scalaj.http.{ Http, HttpResponse }
 
 package object solr4files extends DebugEnhancedLogging {
-  private val pathEscaper = UrlEscapers.urlPathSegmentEscaper()
 
   type FeedBackMessage = String
   type SolrLiterals = Seq[(String, String)]
   type FileToShaMap = Map[String, String]
   type VocabularyMap = Map[String, String]
   type OutputStreamProvider = () => OutputStream
-
-  def escapePath(path: Path): String = {
-    path.asScala.map(_.toString).map(pathEscaper.escape).mkString("/")
-  }
 
   case class HttpStatusException(msg: String, response: HttpResponse[String])
     extends Exception(s"$msg - ${ response.statusLine }, details: ${ response.body }")
