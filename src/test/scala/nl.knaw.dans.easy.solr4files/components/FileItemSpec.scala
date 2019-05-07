@@ -18,8 +18,11 @@ package nl.knaw.dans.easy.solr4files.components
 import nl.knaw.dans.easy.solr4files.TestSupportFixture
 import nl.knaw.dans.easy.solr4files.components.RightsFor.RESTRICTED_GROUP
 import org.joda.time.DateTime
+import scalaj.http.{ BaseHttp, Http }
 
 class FileItemSpec extends TestSupportFixture {
+
+  private implicit val http: BaseHttp = Http
 
   class MockedBag extends Bag("pdbs", uuid, mock[Vault])
   private val mockedBag = mock[MockedBag]
@@ -49,7 +52,7 @@ class FileItemSpec extends TestSupportFixture {
       accessibleTo = RESTRICTED_GROUP,
       visibleTo = RESTRICTED_GROUP
     )
-    val solrLiterals = FileItem(mockedBag, (xml \ "title").text, (xml \ "format").text , authInfoItem).solrLiterals.toMap
+    val solrLiterals = FileItem(mockedBag, (xml \ "title").text, (xml \ "format").text, authInfoItem).solrLiterals.toMap
     solrLiterals("file_path") shouldBe filePath
     solrLiterals("file_size") shouldBe s"$fileSize"
     solrLiterals("file_title") shouldBe "video about the centaur meteorite"

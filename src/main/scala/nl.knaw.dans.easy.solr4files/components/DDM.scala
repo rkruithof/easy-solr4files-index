@@ -22,6 +22,7 @@ import nl.knaw.dans.easy.solr4files.components.DDM._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import scalaj.http.{ BaseHttp, Http }
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -82,14 +83,20 @@ object DDM {
 
   private val abrPrefix = "abr:ABR"
 
+  private implicit val http: BaseHttp = Http
+
+  // it is OK to use scalaj-http's version of `Http` and not our own,
+  // since we're just fetching from some external url
   private lazy val abrMaps = loadVocabularies("https://easy.dans.knaw.nl/schemas/vocab/2012/10/abr-type.xsd")
     .map { case (k, v) => // attributes in xsd are complex/periode
       (s"$abrPrefix$k", v) // we want to search with DDM attributes which are abr:ABRcomplex/abr:ABRperiode
     }
 
+  // it is OK to use scalaj-http's version of `Http` and not our own,
+  // since we're just fetching from some external url
   private lazy val audienceMap = loadVocabularies(
     "https://easy.dans.knaw.nl/schemas/vocab/2015/narcis-type.xsd"
-  )("Discipline")
+  ).apply("Discipline")
 
   private def getAbrMap(n: Node): Option[VocabularyMap] = {
     n.attribute(xsiURI, "type")
@@ -139,7 +146,7 @@ object DDM {
     (solrField, internal().mkString(" ").replaceAll("\\s+", " ").trim)
   }
 
-  private def loadVocabularies(xsdURL: String): Map[String, VocabularyMap] = {
+  private def loadVocabularies(xsdURL: String)(implicit http: BaseHttp): Map[String, VocabularyMap] = {
     for {
       url <- Try(new URL(xsdURL))
       xml <- url.loadXml

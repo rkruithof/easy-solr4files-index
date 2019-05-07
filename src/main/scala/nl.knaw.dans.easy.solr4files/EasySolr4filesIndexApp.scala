@@ -125,16 +125,19 @@ trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
     getAccessibleAuthInfo(bag.bagId, fileNode) match {
       case None => Some(Failure(new Exception(s"invalid files.xml for ${ bag.bagId }: filepath attribute is missing in ${ fileNode.toString().toOneLiner }")))
       case Some(Failure(t)) => Some(Failure(t))
-      case Some(Success(authInfoItem)) if !authInfoItem.isAccessible => None
-      case Some(Success(authInfoItem)) => Some(Success(FileItem(bag, title, mimeType , authInfoItem)))
+      case Some(Success(authInfoItem)) if !authInfoItem.isAccessible =>
+        logger.info(s"file ${authInfoItem.itemId} is not accessible, not indexing")
+        None
+      case Some(Success(authInfoItem)) =>
+        logger.info(s"file ${authInfoItem.itemId} is accessible, indexing")
+        Some(Success(FileItem(bag, title, mimeType , authInfoItem)))
     }
   }
 
   private def getAccessibleAuthInfo(bagID: UUID, fileNode: Node): Option[Try[AuthorisationItem]] = {
     fileNode
       .attribute("filepath")
-      .map(attribute => authorisation.getAuthInfoItem(bagID, Paths.get(attribute.text))
-      )
+      .map(attribute => authorisation.getAuthInfoItem(bagID, Paths.get(attribute.text)))
   }
 
   def authenticate(authRequest: BasicAuthRequest): Try[Option[User]] = {

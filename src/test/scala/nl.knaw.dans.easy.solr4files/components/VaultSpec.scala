@@ -19,10 +19,13 @@ import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files.TestSupportFixture
 import org.apache.commons.io.FileUtils.write
+import scalaj.http.{ BaseHttp, Http }
 
 import scala.util.Success
 
 class VaultSpec extends TestSupportFixture {
+
+  private implicit val http: BaseHttp = Http
 
   "getStoreNames" should "return names" in {
     clearVault()

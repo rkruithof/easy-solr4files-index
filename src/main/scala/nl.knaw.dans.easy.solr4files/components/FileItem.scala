@@ -18,8 +18,6 @@ package nl.knaw.dans.easy.solr4files.components
 import nl.knaw.dans.easy.solr4files.SolrLiterals
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
-import scala.xml.Node
-
 case class FileItem(bag: Bag, title: String, mimeType: String, authInfoItem: AuthorisationItem) extends DebugEnhancedLogging {
 
   //strip the UUID from the itemId including the first slash

@@ -23,12 +23,12 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.io.FileUtils.readFileToString
 import org.apache.solr.common.util.NamedList
 import org.scalatra
+import scalaj.http.{ BaseHttp, HttpResponse }
 
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.{ Failure, Success, Try }
 import scala.xml.{ Elem, Node, XML }
-import scalaj.http.{ Http, HttpResponse }
 
 package object solr4files extends DebugEnhancedLogging {
 
@@ -151,30 +151,32 @@ package object solr4files extends DebugEnhancedLogging {
 
   implicit class RichURL(val left: URL) {
 
-    def loadXml: Try[Elem] = {
+    def loadXml(implicit http: BaseHttp): Try[Elem] = {
+      logger.info(s"loading xml from $left")
       getContent.flatMap(s => Try(XML.loadString(s)))
     }
 
-    def readLines: Try[Seq[String]] = {
+    def readLines(implicit http: BaseHttp): Try[Seq[String]] = {
+      logger.info(s"loading text from $left")
       getContent.map(_.split("\n"))
     }
 
-    private def getContent: Try[String] = {
+    private def getContent(implicit http: BaseHttp): Try[String] = {
       if (left.getProtocol.toLowerCase == "file") {
         val path = URLDecoder.decode(left.getPath, "UTF8")
         Try(readFileToString(new File(path), "UTF8"))
       }
-      else Try(Http(left.toString).method("GET").asString).flatMap {
+      else Try(http(left.toString).method("GET").asString).flatMap {
         case response if response.isSuccess => Success(response.body)
         case response => Failure(HttpStatusException(s"getContent($left)", response))
       }
     }
 
-    def getContentLength: Long = {
+    def getContentLength(implicit http: BaseHttp): Long = {
       if (left.getProtocol.toLowerCase == "file")
         Try(new File(left.getPath).length)
       else {
-        Try(Http(left.toString).method("HEAD").asString).flatMap {
+        Try(http(left.toString).method("HEAD").asString).flatMap {
           case response if response.isSuccess =>
             response.headers("content-length").headOption
               .map(cl => Success(cl.toLong))

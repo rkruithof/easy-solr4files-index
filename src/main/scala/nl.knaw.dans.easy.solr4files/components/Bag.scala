@@ -20,6 +20,7 @@ import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files.{ FileToShaMap, _ }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import scalaj.http.BaseHttp
 
 import scala.util.Try
 import scala.util.matching.Regex
@@ -28,7 +29,7 @@ import scala.xml.Elem
 case class Bag(storeName: String,
                bagId: UUID,
                private val vault: Vault
-              ) extends DebugEnhancedLogging {
+              )(implicit http: BaseHttp) extends DebugEnhancedLogging {
 
   def fileUrl(path: String): Try[URL] = {
     vault.fileURL(storeName, bagId, path)

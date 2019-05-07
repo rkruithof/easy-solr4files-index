@@ -22,13 +22,14 @@ import java.util.UUID
 import nl.knaw.dans.easy.solr4files._
 import nl.knaw.dans.lib.encode.PathEncoding
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import scalaj.http.BaseHttp
 
 import scala.util.Try
 
 trait Vault extends DebugEnhancedLogging {
   val vaultBaseUri: URI
 
-  def getStoreNames: Try[Seq[String]] = for {
+  def getStoreNames(implicit http: BaseHttp): Try[Seq[String]] = for {
     uri <- Try(vaultBaseUri.resolve("stores"))
     _ = logger.info(s"getting storeNames with $uri")
     lines <- uri.toURL.readLines
@@ -39,7 +40,7 @@ trait Vault extends DebugEnhancedLogging {
       .getFileName.toString
   }
 
-  def getBagIds(storeName: String): Try[Seq[UUID]] = for {
+  def getBagIds(storeName: String)(implicit http: BaseHttp): Try[Seq[UUID]] = for {
     // no state param (in fact no param at all) so we just get the active bags
     storeURI <- Try(vaultBaseUri.resolve(s"stores/$storeName/bags"))
     lines <- storeURI.toURL.readLines
@@ -47,7 +48,7 @@ trait Vault extends DebugEnhancedLogging {
     .withFilter(_.trim.nonEmpty)
     .map(str => UUID.fromString(str.trim))
 
-  def getSize(storeName: String, bagId: UUID, path: String): Long = {
+  def getSize(storeName: String, bagId: UUID, path: String)(implicit http: BaseHttp): Long = {
     fileURL(storeName, bagId, path).map(_.getContentLength).getOrElse(-1L)
   }
 

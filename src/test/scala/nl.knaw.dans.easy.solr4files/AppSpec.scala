@@ -25,14 +25,15 @@ import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.client.solrj.{ SolrClient, SolrRequest, SolrResponse }
 import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.common.util.NamedList
+import scalaj.http.{ BaseHttp, Http, HttpResponse }
 
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
-import scalaj.http.HttpResponse
 
 class AppSpec extends TestSupportFixture {
 
   private val storeName = "pdbs"
+  private implicit val http: BaseHttp = Http
 
   private class EmptyDDM extends DDM(<empty/>)
   private val mockedDDM: DDM = mock[EmptyDDM]
@@ -220,7 +221,6 @@ class AppSpec extends TestSupportFixture {
       override def initSingleStore(storeName: String): Try[StoreSubmitted] = {
         Failure(new Exception("stubbed ApplicationWiring.initSingleStore"))
       }
-
     }.initAllStores()
     inside(result) { case Failure(e) => e should have message "stubbed ApplicationWiring.initSingleStore" }
   }

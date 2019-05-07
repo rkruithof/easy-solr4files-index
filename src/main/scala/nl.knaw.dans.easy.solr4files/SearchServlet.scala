@@ -43,9 +43,9 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
       .doIfFailure { case e => logger.error(e.getMessage, e) }
       .getOrRecover {
         case SolrBadRequestException(message, _) => BadRequest(message)
-        case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_NOT_FOUND => NotFound(message)
-        case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_SERVICE_UNAVAILABLE => ServiceUnavailable(message)
-        case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_REQUEST_TIMEOUT => RequestTimeout(message)
+        case HttpStatusException(message, HttpResponse(_, SC_NOT_FOUND, _)) => NotFound(message)
+        case HttpStatusException(message, HttpResponse(_, SC_SERVICE_UNAVAILABLE, _)) => ServiceUnavailable(message)
+        case HttpStatusException(message, HttpResponse(_, SC_REQUEST_TIMEOUT, _)) => RequestTimeout(message)
         case _ => InternalServerError()
       }
   }

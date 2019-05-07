@@ -21,7 +21,17 @@ trait HttpContext {
 
   val applicationVersion: String
 
-  lazy val userAgent: String = s"easy-solr4files-index/$applicationVersion"
+  lazy val userAgent: String = {
+    val agent = s"easy-solr4files-index/$applicationVersion"
+    
+    // Solr's library does a call to easy-bag-store in ContentStreamBase.URLStream,
+    // here we cannot set the user-agent
+    // therefore we need to set it here, such that it can be used in
+    // sun.net.www.protocol.http.HttpURLConnection
+    System.setProperty("http.agent", agent)
 
-  object Http extends BaseHttp(userAgent = userAgent)
+    agent
+  }
+
+  implicit object Http extends BaseHttp(userAgent = userAgent)
 }

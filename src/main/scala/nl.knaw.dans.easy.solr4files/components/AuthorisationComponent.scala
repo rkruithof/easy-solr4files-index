@@ -40,6 +40,8 @@ trait AuthorisationComponent extends DebugEnhancedLogging {
 
     def getAuthInfoItem(bagId: UUID, path: Path): Try[AuthorisationItem] = {
       val uri = baseUri.resolve(s"$bagId/${ path.escapePath }")
+      logger.info(s"loading authorisation info from $uri")
+
       for {
         jsonString <- http.getHttpAsString(uri, connectionTimeOutMs, readTimeOutMs)
         jsonOneLiner = jsonString.toOneLiner

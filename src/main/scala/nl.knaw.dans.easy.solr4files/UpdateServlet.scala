@@ -39,15 +39,13 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
       .doIfFailure { case e => logger.error(e.getMessage, e) }
       .getOrRecover {
         case SolrBadRequestException(message, _) => BadRequest(message) // delete or search only
-        case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_NOT_FOUND => NotFound(message)
-        case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_SERVICE_UNAVAILABLE => ServiceUnavailable(message)
-        case HttpStatusException(message, r: HttpResponse[String]) if r.code == SC_REQUEST_TIMEOUT => RequestTimeout(message)
-        case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_NOT_FOUND => NotFound(msgPrefix + message)
-        case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_SERVICE_UNAVAILABLE => ServiceUnavailable(msgPrefix + message)
-        case MixedResultsException(_, HttpStatusException(message, r: HttpResponse[String])) if r.code == SC_REQUEST_TIMEOUT => RequestTimeout(msgPrefix + message)
-        case t =>
-          logger.error(s"not expected exception", t)
-          InternalServerError(t.getMessage) // for an internal servlet we can and should expose the cause
+        case HttpStatusException(message, HttpResponse(_, SC_NOT_FOUND, _)) => NotFound(message)
+        case HttpStatusException(message, HttpResponse(_, SC_SERVICE_UNAVAILABLE, _)) => ServiceUnavailable(message)
+        case HttpStatusException(message, HttpResponse(_, SC_REQUEST_TIMEOUT, _)) => RequestTimeout(message)
+        case MixedResultsException(_, HttpStatusException(message, HttpResponse(_, SC_NOT_FOUND, _))) => NotFound(msgPrefix + message)
+        case MixedResultsException(_, HttpStatusException(message, HttpResponse(_, SC_SERVICE_UNAVAILABLE, _))) => ServiceUnavailable(msgPrefix + message)
+        case MixedResultsException(_, HttpStatusException(message, HttpResponse(_, SC_REQUEST_TIMEOUT, _))) => RequestTimeout(msgPrefix + message)
+        case t => InternalServerError(t.getMessage) // for an internal servlet we can and should expose the cause
       }
   }
 

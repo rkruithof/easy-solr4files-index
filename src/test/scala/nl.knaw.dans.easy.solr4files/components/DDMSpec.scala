@@ -16,8 +16,11 @@
 package nl.knaw.dans.easy.solr4files.components
 
 import nl.knaw.dans.easy.solr4files.{ TestSupportFixture, _ }
+import scalaj.http.{ BaseHttp, Http }
 
 class DDMSpec extends TestSupportFixture {
+
+  private implicit val http: BaseHttp = Http
 
   "solrLiteral" should "return proper values" in {
     initVault()
