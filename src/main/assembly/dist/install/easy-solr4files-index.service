@@ -5,6 +5,7 @@ Description=EASY SOLR for Files index service
 ExecStart=/bin/java \
  -Dlogback.configurationFile=/etc/opt/dans.knaw.nl/easy-solr4files-index/logback-service.xml \
  -Dapp.home=/opt/dans.knaw.nl/easy-solr4files-index \
+ -Dorg.scalatra.environment="production" \
  -jar /opt/dans.knaw.nl/easy-solr4files-index/bin/easy-solr4files-index.jar run-service
 
 # Java returns 143 even if the SIGTERM was handled correctly.
