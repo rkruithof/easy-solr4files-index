@@ -21,7 +21,6 @@ import java.util.UUID
 import nl.knaw.dans.easy.solr4files.components._
 import nl.knaw.dans.lib.error.{ CompositeException, _ }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.solr.client.solrj.SolrServerException
 import org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest
 
 import scala.util.{ Failure, Success, Try }
@@ -53,9 +52,9 @@ trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
       _ = logger.info(s"committed $feedbackMessage")
     } yield feedbackMessage
   }.recoverWith {
+    case t if t.getMessage contains "Server refused connection" => Failure(t)
     case t: SolrStatusException => commitAnyway(t) // just the delete
     case t: SolrUpdateException => commitAnyway(t) // just the delete
-    case MixedResultsException(_, e: SolrServerException) if e.getMessage contains "Server refused connection" => Failure(e)
     case t: MixedResultsException[_] => commitAnyway(t) // delete and some files
     case t => Failure(t)
   }
