@@ -180,7 +180,7 @@ package object solr4files extends DebugEnhancedLogging {
         Try(new File(left.getPath).length)
       else {
         val urlPattern = "^.*/stores/.*/bags/.*$".r
-        val itemUrl = urlPattern findFirstIn(left.toString) getOrElse(Failure(InvalidItemUrlException(left)))
+        val itemUrl = urlPattern.findFirstIn(left.toString).getOrElse(Failure(InvalidItemUrlException(left)))
         val fileSizesUrl = itemUrl.toString.replaceFirst("/bags/", "/bags/filesizes/")
         Try(http(fileSizesUrl).method("GET").asString).flatMap {
           case response if response.isSuccess => Try { response.body.toLong }
