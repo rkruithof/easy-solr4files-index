@@ -61,6 +61,9 @@ package object solr4files extends DebugEnhancedLogging {
     logger.info(cause.getMessage, cause)
   }
 
+  case class InvalidItemUrlException(url: URL)
+    extends Exception(s"Invalid item url $url")
+
   case class SolrStatusException(namedList: NamedList[AnyRef])
     extends Exception(s"solr returned: ${ namedList.asShallowMap().values().toArray().mkString }")
 
@@ -172,16 +175,16 @@ package object solr4files extends DebugEnhancedLogging {
       }
     }
 
-    def getContentLength(implicit http: BaseHttp): Long = {
+    def getFileSize(implicit http: BaseHttp): Long = {
       if (left.getProtocol.toLowerCase == "file")
         Try(new File(left.getPath).length)
       else {
-        Try(http(left.toString).method("HEAD").asString).flatMap {
-          case response if response.isSuccess =>
-            response.headers("content-length").headOption
-              .map(cl => Success(cl.toLong))
-              .getOrElse(Failure(HttpStatusException(s"no content-length header found in response of $left", response)))
-          case response => Failure(HttpStatusException(s"getContentLength($left)", response))
+        val urlPattern = "^.*/stores/.*/bags/.*$".r
+        val itemUrl = urlPattern findFirstIn(left.toString) getOrElse(Failure(InvalidItemUrlException(left)))
+        val fileSizesUrl = itemUrl.toString.replaceFirst("/bags/", "/bags/filesizes/")
+        Try(http(fileSizesUrl).method("GET").asString).flatMap {
+          case response if response.isSuccess => Try { response.body.toLong }
+          case response => Failure(HttpStatusException(s"getFileSize($fileSizesUrl)", response))
         }
       }
     }.doIfFailure { case e => logger.warn(e.getMessage, e) }
