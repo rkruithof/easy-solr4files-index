@@ -28,11 +28,13 @@ import scala.util.Try
 
 trait Vault extends DebugEnhancedLogging {
   val vaultBaseUri: URI
+  val listBagsConnTimeoutMs : Int
+  val listBagsReadTimeoutMs : Int
 
   def getStoreNames(implicit http: BaseHttp): Try[Seq[String]] = for {
     uri <- Try(vaultBaseUri.resolve("stores"))
     _ = logger.info(s"getting storeNames with $uri")
-    lines <- uri.toURL.readLines
+    lines <- uri.toURL.readLines()
   } yield lines.map { line =>
     val trimmed = line.trim.replace("<", "").replace(">", "")
     Paths
@@ -43,7 +45,7 @@ trait Vault extends DebugEnhancedLogging {
   def getBagIds(storeName: String)(implicit http: BaseHttp): Try[Seq[UUID]] = for {
     // no state param (in fact no param at all) so we just get the active bags
     storeURI <- Try(vaultBaseUri.resolve(s"stores/$storeName/bags"))
-    lines <- storeURI.toURL.readLines
+    lines <- storeURI.toURL.readLines(listBagsConnTimeoutMs, listBagsReadTimeoutMs)
   } yield lines
     .withFilter(_.trim.nonEmpty)
     .map(str => UUID.fromString(str.trim))

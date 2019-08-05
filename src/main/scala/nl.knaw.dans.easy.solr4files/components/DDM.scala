@@ -149,7 +149,7 @@ object DDM {
   private def loadVocabularies(xsdURL: String)(implicit http: BaseHttp): Map[String, VocabularyMap] = {
     for {
       url <- Try(new URL(xsdURL))
-      xml <- url.loadXml
+      xml <- url.loadXml()
     } yield (xml \ "simpleType")
       .map(n => (mapName(n), findKeyValuePairs(n)))
       .toMap

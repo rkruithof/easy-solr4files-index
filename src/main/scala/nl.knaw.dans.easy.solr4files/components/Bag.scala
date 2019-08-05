@@ -48,7 +48,7 @@ case class Bag(storeName: String,
     // gov.loc.repository.bagit.reader.ManifestReader reads files, we need URL or stream
     for {
       url <- vault.fileURL(storeName, bagId, "manifest-sha1.txt")
-      lines <- url.readLines
+      lines <- url.readLines()
     } yield lines.map { line: String =>
       val regex(sha, path) = line.trim
       (path, sha)
@@ -61,9 +61,9 @@ case class Bag(storeName: String,
 
   def loadDDM: Try[Elem] = vault
     .fileURL(storeName, bagId, "metadata/dataset.xml")
-    .flatMap(_.loadXml)
+    .flatMap(_.loadXml())
 
   def loadFilesXML: Try[Elem] = vault
     .fileURL(storeName, bagId, "metadata/files.xml")
-    .flatMap(_.loadXml)
+    .flatMap(_.loadXml())
 }

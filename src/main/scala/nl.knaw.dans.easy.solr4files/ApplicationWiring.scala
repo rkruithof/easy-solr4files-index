@@ -46,12 +46,14 @@ trait ApplicationWiring
     override val connectionTimeOutMs: Int = configuration.properties.getInt("auth-info.connection-timeout-ms")
     override val readTimeOutMs: Int = configuration.properties.getInt("auth-info.read-timeout-ms")
   }
+  override val vaultBaseUri: URI = new URI(configuration.properties.getString("vault.url", "http://localhost"))
+  override val listBagsConnTimeoutMs: Int = configuration.properties.getInt("list-bags.connection-timeout-ms")
+  override val listBagsReadTimeoutMs: Int = configuration.properties.getInt("list-bags.read-timeout-ms")
   override val http: HttpWorker = new HttpWorker {}
 
   // don't need resolve for solr, URL gives more early errors TODO perhaps not yet at service startup once implemented
   private val solrUrl: URL = new URL(configuration.properties.getString("solr.url", "http://localhost"))
   override val solrClient: SolrClient = new HttpSolrClient.Builder(solrUrl.toString).build()
-  override val vaultBaseUri: URI = new URI(configuration.properties.getString("vault.url", "http://localhost"))
   //TODO BagStoreComponent using HttpWorker as in easy-download
 
   // Cannot use properties.getList in the following line because we do not parse commas. Parsing commas conflicts with having LDAP DNs as values.
