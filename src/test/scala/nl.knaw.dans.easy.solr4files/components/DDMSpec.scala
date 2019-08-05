@@ -25,7 +25,7 @@ class DDMSpec extends TestSupportFixture {
   "solrLiteral" should "return proper values" in {
     initVault()
     assume(canConnectToEasySchemas)
-    val xml = mockedVault.fileURL("pdbs", uuidCentaur, "metadata/dataset.xml").flatMap(_.loadXml).getOrElse(<ddm/>)
+    val xml = mockedVault.fileURL("pdbs", uuidCentaur, "metadata/dataset.xml").flatMap(_.loadXml()).getOrElse(<ddm/>)
 
     val ddm = new DDM(xml)
     val literals: Seq[(String, String)] = ddm.solrLiterals

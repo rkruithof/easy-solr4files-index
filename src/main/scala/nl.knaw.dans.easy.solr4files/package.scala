@@ -152,24 +152,27 @@ package object solr4files extends DebugEnhancedLogging {
     }
   }
 
+  val defaultConnTimeout = 1000
+  val defaultReadTimeout = 5000
+
   implicit class RichURL(val left: URL) {
 
-    def loadXml(implicit http: BaseHttp): Try[Elem] = {
+    def loadXml(connTimeoutMs: Int = defaultConnTimeout, readTimeoutMs: Int = defaultReadTimeout)(implicit http: BaseHttp): Try[Elem] = {
       logger.info(s"loading xml from $left")
-      getContent.flatMap(s => Try(XML.loadString(s)))
+      getContent(connTimeoutMs, readTimeoutMs).flatMap(s => Try(XML.loadString(s)))
     }
 
-    def readLines(implicit http: BaseHttp): Try[Seq[String]] = {
+    def readLines(connTimeoutMs: Int = defaultConnTimeout, readTimeoutMs: Int = defaultReadTimeout)(implicit http: BaseHttp): Try[Seq[String]] = {
       logger.info(s"loading text from $left")
-      getContent.map(_.split("\n"))
+      getContent(connTimeoutMs, readTimeoutMs).map(_.split("\n"))
     }
 
-    private def getContent(implicit http: BaseHttp): Try[String] = {
+    private def getContent(connTimeoutMs: Int = defaultConnTimeout, readTimeoutMs: Int = defaultReadTimeout)(implicit http: BaseHttp): Try[String] = {
       if (left.getProtocol.toLowerCase == "file") {
         val path = URLDecoder.decode(left.getPath, "UTF8")
         Try(readFileToString(new File(path), "UTF8"))
       }
-      else Try(http(left.toString).method("GET").asString).flatMap {
+      else Try(http(left.toString).method("GET").timeout(connTimeoutMs, readTimeoutMs).asString).flatMap {
         case response if response.isSuccess => Success(response.body)
         case response => Failure(HttpStatusException(s"getContent($left)", response))
       }
