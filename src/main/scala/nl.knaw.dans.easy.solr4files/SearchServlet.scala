@@ -36,7 +36,7 @@ class SearchServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   with PlainLogFormatter
   with LogResponseBodyOnError
   with DebugEnhancedLogging {
-  logger.info("File index Servlet running...")
+  logger.info("File index search servlet running...")
 
   private def respond(result: Try[String]): ActionResult = {
     result.map(Ok(_))

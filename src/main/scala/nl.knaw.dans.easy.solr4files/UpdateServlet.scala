@@ -31,7 +31,7 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   with PlainLogFormatter
   with LogResponseBodyOnError
   with DebugEnhancedLogging {
-  logger.info("File index Servlet running...")
+  logger.info("File index update servlet running...")
 
   private def respond(result: Try[String]): ActionResult = {
     val msgPrefix = "Log files should show which actions succeeded. Finally failed with: "

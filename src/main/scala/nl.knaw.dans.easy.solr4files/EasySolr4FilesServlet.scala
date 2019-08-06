@@ -24,7 +24,7 @@ class EasySolr4FilesServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   with PlainLogFormatter
   with LogResponseBodyOnError
   with DebugEnhancedLogging {
-  logger.info("File index Servlet running...")
+  logger.info("File index servlet running...")
 
   get("/") {
     contentType = "text/plain"

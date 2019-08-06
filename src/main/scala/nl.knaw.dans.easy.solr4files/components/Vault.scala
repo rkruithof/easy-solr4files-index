@@ -51,7 +51,7 @@ trait Vault extends DebugEnhancedLogging {
     .map(str => UUID.fromString(str.trim))
 
   def getSize(storeName: String, bagId: UUID, path: String)(implicit http: BaseHttp): Long = {
-    fileURL(storeName, bagId, path).map(_.getFileSize).getOrElse(-1L)
+    fileURL(storeName, bagId, path).map(_.getContentLength).getOrElse(-1L)
   }
 
   def fileURL(storeName: String, bagId: UUID, file: String): Try[URL] = Try {
