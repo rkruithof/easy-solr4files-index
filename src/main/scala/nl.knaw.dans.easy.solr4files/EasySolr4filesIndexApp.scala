@@ -42,9 +42,9 @@ trait EasySolr4filesIndexApp extends ApplicationWiring with AutoCloseable
   def update(storeName: String, bagId: UUID): Try[BagSubmitted] = {
     val bag = Bag(storeName, bagId, this)
     for {
-      ddmXML <- bag.loadDDM
+      ddmXML <- bag.loadDDM(fetchMetadataConnTimeoutMs, fetchMetadataReadTimeoutMs)
       ddm = new DDM(ddmXML)
-      filesXML <- bag.loadFilesXML
+      filesXML <- bag.loadFilesXML(fetchMetadataConnTimeoutMs, fetchMetadataReadTimeoutMs)
       _ = logger.info(s"deleted documents of $bagId")
       _ <- deleteDocuments(s"id:${ bag.bagId }*")
       feedbackMessage <- updateFiles(bag, ddm, filesXML)

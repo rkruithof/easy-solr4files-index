@@ -59,4 +59,7 @@ trait ApplicationWiring
   // Cannot use properties.getList in the following line because we do not parse commas. Parsing commas conflicts with having LDAP DNs as values.
   override val mimeTypesToExtractContentFrom: Seq[String] = configuration.properties.getString("file-content-extraction.mime-types", "").split(Array(' ', ','))
   override val maxFileSizeToExtractContentFrom: Double = configuration.properties.getString("file-content-extraction.max-filesize", (64 * 1024 * 1024).toString).toDouble
+
+  val fetchMetadataConnTimeoutMs: Int = configuration.properties.getInt("fetch-metadata.connection-timeout-ms")
+  val fetchMetadataReadTimeoutMs: Int = configuration.properties.getInt("fetch-metadata.read-timeout-ms")
 }

@@ -59,11 +59,11 @@ case class Bag(storeName: String,
     fileShas.getOrElse(path, "")
   }
 
-  def loadDDM: Try[Elem] = vault
+  def loadDDM(connTimeoutMs: Int = defaultConnTimeout, readTimeoutMs: Int = defaultReadTimeout): Try[Elem] = vault
     .fileURL(storeName, bagId, "metadata/dataset.xml")
-    .flatMap(_.loadXml())
+    .flatMap(_.loadXml(connTimeoutMs, readTimeoutMs))
 
-  def loadFilesXML: Try[Elem] = vault
+  def loadFilesXML(connTimeoutMs: Int = defaultConnTimeout, readTimeoutMs: Int = defaultReadTimeout): Try[Elem] = vault
     .fileURL(storeName, bagId, "metadata/files.xml")
-    .flatMap(_.loadXml())
+    .flatMap(_.loadXml(connTimeoutMs, readTimeoutMs))
 }
