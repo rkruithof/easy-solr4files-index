@@ -3,6 +3,7 @@ Description=EASY SOLR for Files index service
 
 [Service]
 ExecStart=/bin/java \
+ $INITIAL_HEAP_SIZE \
  -Dlogback.configurationFile=/etc/opt/dans.knaw.nl/easy-solr4files-index/logback-service.xml \
  -Dapp.home=/opt/dans.knaw.nl/easy-solr4files-index \
  -Dorg.scalatra.environment="production" \
