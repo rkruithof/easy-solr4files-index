@@ -38,7 +38,7 @@ Placeholders for variables start with a colon, optional parts are enclosed in sq
 
 Method   | Path                             | Action
 ---------|----------------------------------|------------------------------------
-`GET`    | `/fileindex`                     | Return a simple message to indicate that the service is up: "EASY File index is running."
+`GET`    | `/`                              | Return a simple message to indicate that the service is up: "EASY File index is running."
 `POST`   | `/fileindex/init[/:store]`       | Index all bag stores or just one. Possible obsolete items are cleared.
 `POST`   | `/fileindex/update/:store/:uuid` | Index all files of one bag. Possible obsolete file items are cleared.
 `DELETE` | `/fileindex/:store[/:uuid]`      | Remove all items from the index or the items of a store or bag.
