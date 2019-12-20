@@ -83,6 +83,8 @@ class AppSpec extends TestSupportFixture {
        |  "dateAvailable":"1992-07-30",
        |  "accessibleTo":"ANONYMOUS",
        |  "visibleTo":"ANONYMOUS"
+       |  "licenseKey":"http://creativecommons.org/publicdomain/zero/1.0",
+       |  "licenseTitle":"CC0-1.0.html"
        |}""".stripMargin)
 
   "update" should "call the stubbed solrClient.request" in {
@@ -141,6 +143,8 @@ class AppSpec extends TestSupportFixture {
          |  "dateAvailable":"1992-07-30",
          |  "accessibleTo":"NONE",
          |  "visibleTo":"NONE"
+         |  "licenseKey":"http://opensource.org/licenses/MIT",
+         |  "licenseTitle":"MIT.txt"
          |}""".stripMargin)
     ) once()
     class MockedBag extends Bag("pdbs", uuid, mock[Vault])

@@ -82,7 +82,9 @@ class SolrErrorHandlingSpec extends TestSupportFixture
          |  "owner":"someone",
          |  "dateAvailable":"1992-07-30",
          |  "accessibleTo":"ANONYMOUS",
-         |  "visibleTo":"ANONYMOUS"
+         |  "visibleTo":"ANONYMOUS",
+         |  "licenseKey":"http://creativecommons.org/publicdomain/zero/1.0",
+         |  "licenseTitle":"CC0-1.0.html"
          |}""".stripMargin))
     initVault()
     post(s"/fileindex/update/pdbs/${ uuidCentaur }") {
