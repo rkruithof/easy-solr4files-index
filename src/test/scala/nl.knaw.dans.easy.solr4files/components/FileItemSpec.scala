@@ -51,7 +51,7 @@ class FileItemSpec extends TestSupportFixture {
       dateAvailable = DateTime.now,
       accessibleTo = RESTRICTED_GROUP,
       visibleTo = RESTRICTED_GROUP,
-      licenseKey = "http://dans.knaw.nl/en/about/organisation-and-policy/legal-information/dans-licence.pdf=DANS_Licence_UK.pdf",
+      licenseKey = "http://dans.knaw.nl/en/about/organisation-and-policy/legal-information/DANSLicence.pdf=DANS_Licence_UK.pdf",
       licenseTitle = "DANS_Licence_UK.pdf"
     )
     val solrLiterals = FileItem(mockedBag, (xml \ "title").text, (xml \ "format").text, authInfoItem).solrLiterals.toMap
