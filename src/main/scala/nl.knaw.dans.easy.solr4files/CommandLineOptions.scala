@@ -17,7 +17,8 @@ package nl.knaw.dans.easy.solr4files
 
 import java.util.UUID
 
-import org.rogach.scallop.{ ScallopConf, ScallopOption, Subcommand, ValueConverter, singleArgConverter }
+import nl.knaw.dans.lib.string._
+import org.rogach.scallop.{ ScallopConf, ScallopOption, Subcommand, ValueConverter, stringConverter }
 
 class CommandLineOptions(args: Array[String], configuration: Configuration) extends ScallopConf(args) {
   type StoreName = String
@@ -57,11 +58,7 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
 
   private val defaultBagStore = Some(configuration.properties.getString("default.bag-store", "MISSING_BAG_STORE"))
 
-  private implicit def bagId: ValueConverter[UUID] = {
-    singleArgConverter {
-      case s => UUID.fromString(s)
-    }
-  }
+  private implicit def uuidConverter: ValueConverter[UUID] = stringConverter.flatMap(_.toUUID.fold(e => Left(e.getMessage), uuid => Right(Option(uuid))))
 
   val update = new Subcommand("update") {
     descr("Update accessible files of a bag in the SOLR index")

@@ -76,7 +76,7 @@ class UpdateServletSpec extends TestSupportFixture
 
   it should "return BAD REQUEST with an invalid uuid" in {
     post("/update/pdbs/rabarbera") {
-      body shouldBe "Invalid UUID string: rabarbera"
+      body shouldBe "String 'rabarbera' is not a UUID"
       status shouldBe SC_BAD_REQUEST
     }
   }
@@ -161,7 +161,7 @@ class UpdateServletSpec extends TestSupportFixture
 
   it should "return BAD REQUEST with an invalid UUID" in {
     delete("/pdbs/rabarbera") {
-      body shouldBe "Invalid UUID string: rabarbera"
+      body shouldBe "String 'rabarbera' is not a UUID"
       status shouldBe SC_BAD_REQUEST
     }
   }

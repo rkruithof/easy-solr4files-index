@@ -15,11 +15,10 @@
  */
 package nl.knaw.dans.easy.solr4files
 
-import java.util.UUID
-
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.logging.servlet._
+import nl.knaw.dans.lib.string._
 import org.apache.http.HttpStatus._
 import org.scalatra._
 import scalaj.http.HttpResponse
@@ -50,7 +49,7 @@ class UpdateServlet(app: EasySolr4filesIndexApp) extends ScalatraServlet
   }
 
   private def getUUID = {
-    Try { UUID.fromString(params("uuid")) }
+    params("uuid").toUUID.toTry
   }
 
   private def badUuid(e: Throwable) = {
