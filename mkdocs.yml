@@ -27,7 +27,6 @@ nav:
   - HTTP API: to-api.md
 
 plugins:
-  - markdownextradata
   - search
 
 markdown_extensions:
