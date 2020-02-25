@@ -87,18 +87,6 @@ See the [security advice](#security-advice) for the URL part preceding the `?`.
 INSTALLATION AND CONFIGURATION
 ------------------------------
 
-### Prerequisites
-
-* [easy-bag-store](https://github.com/DANS-KNAW/easy-bag-store/)
-* [dans.solr](https://github.com/DANS-KNAW/dans.solr)
-* [dans.easy-ldap-dir](https://github.com/DANS-KNAW/dans.easy-ldap-dir)
-* A [Solr core](src/main/assembly/dist/install/fileitems),
-  installed for example with with [vagrant.yml](src/main/ansible/vagrant.yml).
-  Thus a web-ui comes available for administrators with `http://localhost:8983/solr/#/fileitems/query`.
-  A command line example:
-
-        curl 'http://test.dans.knaw.nl:8983/solr/fileitems/query?q=*&fl=*'
-
 ### Steps
 
 1. Unzip the tarball to a directory of your choice, typically `/usr/local/`
