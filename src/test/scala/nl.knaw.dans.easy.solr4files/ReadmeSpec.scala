@@ -22,7 +22,7 @@ import org.scalatest._
 
 import scala.io.Source
 
-class ReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
+class FReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
 
   private val configuration = Configuration(Paths.get("src/main/assembly/dist"))
   private val clo = new CommandLineOptions(Array[String](), configuration) {
@@ -38,26 +38,26 @@ class ReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
     mockedStdOut.toString
   }
 
-  "options in help info" should "be part of README.md" in {
+  "options in help info" should "be part of docs/index.md" in {
     val lineSeparators = s"(${ System.lineSeparator() })+"
     val options = helpInfo.split(s"${ lineSeparators }Options:$lineSeparators")(1)
     options.trim.length shouldNot be(0)
-    new File("README.md") should containTrimmed(options)
+    new File("docs/index.md") should containTrimmed(options)
   }
 
-  "synopsis in help info" should "be part of README.md" in {
-    new File("README.md") should containTrimmed(clo.synopsis)
+  "synopsis in help info" should "be part of docs/index.md" in {
+    new File("docs/index.md") should containTrimmed(clo.synopsis)
   }
 
-  "description line(s) in help info" should "be part of README.md and pom.xml" in {
-    new File("README.md") should containTrimmed(clo.description)
+  "description line(s) in help info" should "be part of docs/index.md and pom.xml" in {
+    new File("docs/index.md") should containTrimmed(clo.description)
     new File("pom.xml") should containTrimmed(clo.description)
   }
 
-  "user filters" should "be listed in README.md" in {
-    val readme = Source.fromFile(new File("README.md")).mkString
+  "user filters" should "be listed in docs/api/api.yml" in {
+    val readme = Source.fromFile(new File("docs/api/api.yml")).mkString
     SearchServlet.userFilters.foreach(
-      s => readme should include(s"`$s`")
+      s => readme should include(s)
     )
   }
 }
