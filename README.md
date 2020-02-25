@@ -8,4 +8,4 @@ Update the EASY SOLR for Files Index with file data from a bag-store.
 Welcome
 -------
 
-Welcome to the `easy-solr4files-index` project. See the [GitHub pages](https://dans-knaw.github.io/easy-solr4files/) for the manual and API documentation.
+Welcome to the `easy-solr4files-index` project. See the [GitHub pages](https://dans-knaw.github.io/easy-solr4files-index/) for the manual and API documentation.
