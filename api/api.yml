@@ -1,0 +1,256 @@
+openapi: 3.0.1
+
+servers:
+    - url: http://localhost:20150/
+
+info:
+  description: Update the EASY SOLR for Files Index with file data from a bag-store.
+  version: 1.0.0
+  title: Solr4files Index
+  contact:
+    email: info@dans.knaw.nl
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+- name: service
+  description: Information about service status
+- name: fileindex
+  description: Indexing of files.
+- name: filesearch
+  description: Searching the file index.
+
+paths:
+
+  /:
+    get:
+      tags:
+        - service
+      summary: Returns a description of the service.
+      responses:
+        200:
+          description: description of the service
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: a plain text, human readable description of the service
+                example: EASY File Index is running v(1.0.0).
+
+  /fileindex/init/{:store}:
+    post:
+      tags:
+        - fileindex
+      summary: Index all bag stores or just one. Possible obsolete items are cleared
+      responses:
+        200:
+          description: Ok. List of updated bags and stores.
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /fileindex/update/{store}/{uuid}:
+    post:
+      tags:
+        - fileindex
+      summary:  Index all files of one bag. Possible obsolete file items are cleared.
+      responses:
+        200:
+          description: Ok. UUID of the bag that was updated.
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /fileindex/{store}/{:uuid}:
+    delete:
+      tags:
+        - fileindex
+      summary: Remove all items of a store or bag from the index.
+      responses:
+        200:
+          description: Ok. Deleted items from the given store (and with the given uuid).
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /fileindex:
+    delete:
+      tags:
+        - fileindex
+      summary:  Requires parameter q, a mandatory [standard] solr query that specifies the items to remove from the index.
+      responses:
+        200:
+          description: Ok. Deleted documents with query q.
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/Query'
+
+  /filesearch:
+    get:
+      tags:
+        - filesearch
+      summary: Return indexed metadata. Query parameters are optional, not known parameters are ignored.
+      responses:
+        200:
+          description: Ok.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileSearch'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/Query'
+
+
+components:
+  parameters:
+
+    Query:
+      name: q
+      description: |
+        A [standard](https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html) solr query.
+
+        `text`: The query for the textual content. Becomes the `q` parameter of a [dismax](https://lucene.apache.org/solr/guide/6_6/the-dismax-query-parser.html#the-dismax-query-parser) query. If not specified all accessible items are returned unless a restriction is specified.
+
+        `skip`: For result paging, default 0.
+
+        `limit`: For result paging, default 10.
+
+        `dataset_id`, `dataset_doi`: Restrict to one or some datasets. Repeating just one type of the identifiers returns items for each value. Mixing identifier types only returns items matching at least one of the values for each type.
+
+        `dataset_depositor_id`: Restrict to the specific dataset field. Repeating a field returns items with at least one of the values. Specifying multiple fields only returns items matching at least one of the values for each field.
+
+
+      example:
+        - text
+        - skip
+        - limit
+        - dataset_id
+        - dataset_doi
+        - dataset_depositor_id
+        - file_mime_type
+        - file_size
+        - file_checksum
+        - dataset_title
+        - dataset_creator
+        - dataset_audience
+        - dataset_relation
+        - dataset_subject
+        - dataset_coverage
+      in: path
+      schema:
+        type: string
+
+  responses:
+
+    BadRequest:
+      description: Bad Request.
+
+    NotFound:
+      description: Not found. The body specifies if the deposit or something in the deposit is not found.
+
+    InternalServerError:
+      description: Internal Server Error.
+
+  schemas:
+
+    FileSearch:
+      type: object
+      example:
+        summary:
+          text: '*:*'
+          skip: 0
+          limit: 10
+          time_allowed: 5000
+          found: 1
+          returned: 1
+        fileitems:
+          file_mime_type: text/plain
+          dataset_doi: 10.17026/test-dzqV-x6f-kf66
+          dataset_audience: D37000
+          dataset_title: A dataset containing surfaces created with polygons
+          dataset_coverage_temporal: -1500 until -800
+          dataset_date_available: Sun Jan 01 01:00:00 CET 2017
+          dataset_subject: koperlegering
+          dataset_relation: EASY front end
+          file_size: 26
+          dataset_coverage_temporal_abr: BRONSL
+          dataset_identifier: easy-dataset:17
+          dataset_creator: Data Archiving and Network Services DataCurator
+          file_accessible_to: ANONYMOUS
+          dataset_coverage_spatial: A random surface with multiple polygons
+          dataset_store_id: easy
+          file_path: data/ruimtereis01_verklaring%2Etxt
+          dataset_id: ebb04c9b-8cc4-428f-931a-c130b171028c
+      properties:
+        summary:
+          type: object
+          properties:
+            text:
+              type: string
+            skip:
+              type: integer
+            limit:
+              type: integer
+            time_allowed:
+              type: integer
+            found:
+              type: integer
+            returned:
+              type: integer
+        fileitems:
+          type: object
+          properties:
+            file_mime_type:
+              type: string
+            dataset_doi:
+              type: string
+              format: doi
+            dataset_audience:
+              type: string
+            dataset_title:
+              type: string
+            dataset_coverage_temporal:
+              type: string
+            dataset_date_available:
+              type: string
+              format: date
+            dataset_subject:
+              type: string
+            dataset_relation:
+              type: string
+            file_size:
+              type: integer
+            dataset_coverage_temporal_abr:
+              type: string
+            dataset_identifier:
+              type: string
+            dataset_creator:
+              type: string
+            file_accessible_to:
+              type: string
+            dataset_coverage_spatial:
+              type: string
+            dataset_store_id:
+              type: string
+            file_path:
+              type: string
+              format: path
+            dataset_id:
+              type: string
+              format: uuid
