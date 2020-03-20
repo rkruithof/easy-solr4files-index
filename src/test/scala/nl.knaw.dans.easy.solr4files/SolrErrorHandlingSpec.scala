@@ -16,7 +16,7 @@
 package nl.knaw.dans.easy.solr4files
 
 import org.apache.http.HttpStatus._
-import org.apache.solr.client.solrj.impl.HttpSolrClient
+import org.apache.solr.client.solrj.impl.BaseHttpSolrClient
 import org.apache.solr.client.solrj.response.{ QueryResponse, UpdateResponse }
 import org.apache.solr.client.solrj.{ SolrClient, SolrRequest, SolrResponse }
 import org.apache.solr.common.SolrInputDocument
@@ -55,7 +55,7 @@ class SolrErrorHandlingSpec extends TestSupportFixture
         throw new Exception("mocked request")
 
       private def mockParseException = {
-        new HttpSolrClient.RemoteSolrException("mockedHost", 0, "mocked parser", new Exception()) {
+        new BaseHttpSolrClient.RemoteSolrException("mockedHost", 0, "mocked parser", new Exception()) {
           // try the query manually at deasy.dans.knaw.nl:8983/solr/#/fileitems/query
           // and see error.metadata.root-error-class in the response
           override def getRootThrowable: String = "org.apache.solr.parser.ParseException"

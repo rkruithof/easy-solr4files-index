@@ -31,7 +31,7 @@ class SearchServletSpec extends TestSupportFixture
   with ScalatraSuite
   with MockFactory {
 
-  private val testApp = new TestApp() {
+  private val testApp: TestApp = new TestApp() {
     override val solrClient: SolrClient = new SolrClient() {
       // can't use mock because SolrClient has a final method
 

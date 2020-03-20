@@ -21,7 +21,7 @@ import nl.knaw.dans.easy.solr4files._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.http.HttpStatus._
 import org.apache.solr.client.solrj.SolrRequest.METHOD
-import org.apache.solr.client.solrj.impl.HttpSolrClient
+import org.apache.solr.client.solrj.impl.BaseHttpSolrClient
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest
 import org.apache.solr.client.solrj.response.{ SolrResponseBase, UpdateResponse }
 import org.apache.solr.client.solrj.{ SolrClient, SolrQuery }
@@ -80,7 +80,7 @@ trait Solr extends DebugEnhancedLogging {
     Try(solrClient.deleteByQuery(q.getQuery))
       .flatMap(checkResponseStatus)
       .recoverWith {
-        case t: HttpSolrClient.RemoteSolrException if isParseException(t) =>
+        case t: BaseHttpSolrClient.RemoteSolrException if isParseException(t) =>
           Failure(SolrBadRequestException(t.getMessage, t))
         case t =>
           Failure(SolrDeleteException(query, t))
@@ -113,14 +113,14 @@ trait Solr extends DebugEnhancedLogging {
       fileItems = fileItemsAsJson(results, skipFetched)
     } yield toJson(query, results.getNumFound, fileItems) // .getFacet.Xxx, .getGroupXxx .getSortedXxx .getMoreLikeXxx etc.
       ).recoverWith {
-      case t: HttpSolrClient.RemoteSolrException if isParseException(t) =>
+      case t: BaseHttpSolrClient.RemoteSolrException if isParseException(t) =>
         Failure(SolrBadRequestException(t.getMessage, t))
       case t =>
         Failure(SolrSearchException(query.toQueryString, t))
     }
   }
 
-  private def isParseException(t: HttpSolrClient.RemoteSolrException) = {
+  private def isParseException(t: BaseHttpSolrClient.RemoteSolrException) = {
     t.getRootThrowable.endsWith("ParseException")
   }
 

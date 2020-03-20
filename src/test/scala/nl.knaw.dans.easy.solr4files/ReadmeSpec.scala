@@ -19,10 +19,11 @@ import java.io.{ ByteArrayOutputStream, File }
 import java.nio.file.Paths
 
 import org.scalatest._
+import resource.managed
 
 import scala.io.Source
 
-class FReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
+class ReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
 
   private val configuration = Configuration(Paths.get("src/main/assembly/dist"))
   private val clo = new CommandLineOptions(Array[String](), configuration) {
@@ -55,7 +56,7 @@ class FReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
   }
 
   "user filters" should "be listed in docs/api/api.yml" in {
-    val readme = Source.fromFile(new File("docs/api/api.yml")).mkString
+    val readme = managed { Source.fromFile(new File("docs/api/api.yml")) }.acquireAndGet(_.mkString)
     SearchServlet.userFilters.foreach(
       s => readme should include(s)
     )

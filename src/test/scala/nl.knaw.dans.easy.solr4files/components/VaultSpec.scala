@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files.TestSupportFixture
@@ -33,7 +34,8 @@ class VaultSpec extends TestSupportFixture {
       """    <http://localhost:20110/stores/foo>
         |    <http://localhost:20110/stores/bar>
         |    <http://localhost:20110/stores/rabarbera>
-        |    <http://localhost:20110/stores/barbapapa>""".stripMargin
+        |    <http://localhost:20110/stores/barbapapa>""".stripMargin,
+      StandardCharsets.UTF_8
     )
     inside(mockedVault.getStoreNames) {
       case Success(names) => names should contain only("foo", "bar", "rabarbera", "barbapapa")
@@ -47,7 +49,8 @@ class VaultSpec extends TestSupportFixture {
         |    24d305fc-060c-4b3b-a5f5-9f212d463cbc
         |    3528bd4c-a87a-4bfa-9741-a25db7ef758a
         |    f70c19a5-0725-4950-aa42-6489a9d73806
-        |    6ccadbad-650c-47ec-936d-2ef42e5f3cda""".stripMargin
+        |    6ccadbad-650c-47ec-936d-2ef42e5f3cda""".stripMargin,
+      StandardCharsets.UTF_8
     )
     inside(mockedVault.getBagIds("pdbs")) {
       case Success(names) => names should contain only(

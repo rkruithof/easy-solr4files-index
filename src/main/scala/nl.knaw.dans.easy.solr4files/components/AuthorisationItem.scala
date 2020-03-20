@@ -15,9 +15,7 @@
  */
 package nl.knaw.dans.easy.solr4files.components
 
-import java.nio.file.{ Path, Paths }
 import java.text.SimpleDateFormat
-import java.util.UUID
 
 import nl.knaw.dans.easy.solr4files._
 import org.joda.time.DateTime
@@ -35,7 +33,7 @@ case class AuthorisationItem(itemId: String,
                              visibleTo: RightsFor.Value,
                              licenseKey: String,
                              licenseTitle: String,
-                       ) {
+                            ) {
   val isAccessible: Boolean = {
     accessibleTo != RightsFor.NONE
   }
