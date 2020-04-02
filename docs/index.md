@@ -65,40 +65,14 @@ ARGUMENTS
       -h, --help   Show help message
     ---
 
-EXAMPLES
---------
-
-Using the command line to update a single bag in the store `pdbs` respective (re)index all bags in all stores.
-
-    easy-solr4files-index -s pdbs update 9da0541a-d2c8-432e-8129-979a9830b427
-    easy-solr4files-index init
-
-Using the rest interface to delete a bag from the index respective (re)index all bags in one store.
-
-    curl -X DELETE 'http://test.dans.knaw.nl:20150/fileindex/?q=easy_dataset_id:ef425828-e4ae-4d58-bf6a-c89cd46df61c'
-    curl -X POST 'http://test.dans.knaw.nl:20150/fileindex/init/pdbs'
-
-Retrieve the second page of PDF and text files containing one of the words `foo` or `bar`.
-See the [security advice](#security-advice) for the URL part preceding the `?`.
-
-    curl 'http://test.dans.knaw.nl:20150/filesearch?text=foo+bar&file_mime_type=application/pdf&file_mime_type=text&skip=10&limit=10'
-
-
 INSTALLATION AND CONFIGURATION
 ------------------------------
+The preferred way of install this module is using the RPM package. This will install the binaries to
+`/opt/dans.knaw.nl/easy-deposit-api` and the configuration files to `/etc/opt/dans.knaw.nl/easy-deposit-api`.
 
-### Steps
-
-1. Unzip the tarball to a directory of your choice, typically `/usr/local/`
-2. A new directory called easy-solr4files-index-<version> will be created
-3. Add the command script to your `PATH` environment variable by creating a symbolic link to it from a directory that is
-   on the path, e.g. 
-   
-        ln -s /usr/local/easy-solr4files-index-<version>/bin/easy-solr4files-index /usr/bin
-
-General configuration settings can be set in `cfg/application.properties` and logging can be configured
-in `cfg/logback.xml`. The available settings are explained in comments in aforementioned files.
-
+To install the module on systems that do not support RPM, you can copy and unarchive the tarball to the target host.
+You will have to take care of placing the files in the correct locations for your system yourself. For instructions
+on building the tarball, see next section.
 
 ### Security advice
 
@@ -113,12 +87,20 @@ BUILDING FROM SOURCE
 
 Prerequisites:
 
-* RPM
 * Java 8 or higher
 * Maven 3.3.3 or higher
+* RPM 
 
 Steps:
 
-        git clone https://github.com/DANS-KNAW/easy-solr4files-index.git
-        cd easy-solr4files-index
-        mvn install
+    git clone https://github.com/DANS-KNAW/easy-deposit-api.git
+    cd easy-deposit-api
+    mvn install
+
+If the `rpm` executable is found at `/usr/local/bin/rpm`, the build profile that includes the RPM 
+packaging will be activated. If `rpm` is available, but at a different path, then activate it by using
+Maven's `-P` switch: `mvn -Pprm install`.
+
+Alternatively, to build the tarball execute:
+
+    mvn clean install assembly:single
